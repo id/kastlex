@@ -36,9 +36,7 @@ defmodule Kastlex.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
-     {:supervisor3, ">= 0.0.0"},
-     {:kafka_protocol, ">= 0.0.0"},
-     {:brod, "~> 2.0.0", compile: "DEPS_DIR=.. make"},
+     {:brod, "~> 2.1"},
      {:exrm, "~> 0.19.9"}]
   end
 
