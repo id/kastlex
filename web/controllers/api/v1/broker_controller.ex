@@ -6,7 +6,9 @@ defmodule Kastlex.API.V1.BrokerController do
 
   def index(conn, _params) do
     {:ok, {:kpro_MetadataResponse, brokers, _topics}} = :brod_client.get_metadata(:kastlex, :undefined)
-    render(conn, "index.json", brokers: brokers_metadata_to_map(brokers))
+    {:ok, msg} = Poison.encode(brokers_metadata_to_map(brokers))
+    conn = resp(conn, 200, msg)
+    send_resp(conn)
   end
 
   defp brokers_metadata_to_map(brokers) do

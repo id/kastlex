@@ -6,26 +6,30 @@ defmodule Kastlex.API.V1.MessageController do
 
   def show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
     {partition, _} = Integer.parse(partition)
-    max_wait_time = Integer.parse(Map.get(params, "max_wait_time", "1000"))
-    min_bytes = Integer.parse(Map.get(params, "min_bytes", "1"))
-    max_bytes = Integer.parse(Map.get(params, "max_bytes", "104857600")) # 100 kB
+    {offset, _} = Integer.parse(offset)
+    {max_wait_time, _} = Integer.parse(Map.get(params, "max_wait_time", "1000"))
+    {min_bytes, _} = Integer.parse(Map.get(params, "min_bytes", "1"))
+    {max_bytes, _} = Integer.parse(Map.get(params, "max_bytes", "104857600")) # 100 kB
 
     request = :kpro.fetch_request(topic, partition, offset,
                                   max_wait_time, min_bytes, max_bytes)
-    {:ok, pid} = :brod_client.get_leader_connection(:kastlex, topic, partition)
-    {:ok, response} = :brod_sock.request_sync(pid, request, 10000)
-    {:kpro_FetchResponse, [topicFetchData]} = response
-    {:kpro_FetchResponseTopic, _, [partitionFetchData]} = topicFetchData
-    {:kpro_FetchResponsePartition, _, errorCode, highWmOffset, size, messages} = partitionFetchData
-    render(conn, "show.json", data: %{errorCode: errorCode,
-                                      highWmOffset: highWmOffset,
-                                      size: size,
-                                      messages: messages_to_map(messages)})
-  end
-
-  def show(conn, _params) do
-    send_resp(conn, 400, "")
-    halt(conn)
+    case :brod_client.get_leader_connection(:kastlex, topic, partition) do
+      {:ok, pid} ->
+        {:ok, response} = :brod_sock.request_sync(pid, request, 10000)
+        {:kpro_FetchResponse, [topicFetchData]} = response
+        {:kpro_FetchResponseTopic, _, [partitionFetchData]} = topicFetchData
+        {:kpro_FetchResponsePartition, _, errorCode, highWmOffset, size, messages} = partitionFetchData
+        {:ok, msg} = Poison.encode(%{errorCode: errorCode,
+                                     highWmOffset: highWmOffset,
+                                     size: size,
+                                     messages: messages_to_map(messages)})
+        conn = resp(conn, 200, msg)
+        send_resp(conn)
+      {:error, :UnknownTopicOrPartition} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
+        conn = resp(conn, 404, msg)
+        send_resp(conn)
+    end
   end
 
   defp messages_to_map(messages) do
