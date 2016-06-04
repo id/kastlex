@@ -5,14 +5,12 @@ defmodule Kastlex.API.V1.TopicController do
   use Kastlex.Web, :controller
 
   def index(conn, _params) do
-    endpoints = Application.get_env(:kastlex, :kafka_endpoints)
-    {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod.get_metadata(endpoints)
+    {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, :undefined)
     render(conn, "index.json", topics: topics_metadata_to_map(topics))
   end
 
   def show(conn, %{"topic" => name}) do
-    endpoints = Application.get_env(:kastlex, :kafka_endpoints)
-    {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod.get_metadata(endpoints, [name])
+    {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, name)
     [topic] = topics_metadata_to_map(topics)
     render(conn, "show.json", topic: topic)
   end

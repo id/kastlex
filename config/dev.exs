@@ -10,6 +10,8 @@ config :kastlex, Kastlex.Endpoint,
   http: [port: 4000],
   debug_errors: false,
   code_reloader: true,
+  reloadable_paths: ["web"],
+  reloadable_compilers: [:gettext, :phoenix, :elixir],
   check_origin: false,
   watchers: []
 
@@ -39,8 +41,8 @@ config :kastlex, Kastlex.Repo,
   hostname: "localhost",
   pool_size: 10
 
-config :kastlex, :kafka_endpoints,
-  ["localhost": 9092]
-
-config :kastlex, :brod_client_config,
-  auto_start_producers: true
+config :brod, :clients,
+  kastlex: [
+    endpoints: ["localhost": 9092],
+    auto_start_producers: true
+  ]

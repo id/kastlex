@@ -5,8 +5,7 @@ defmodule Kastlex.API.V1.BrokerController do
   use Kastlex.Web, :controller
 
   def index(conn, _params) do
-    endpoints = Application.get_env(:kastlex, :kafka_endpoints)
-    {:ok, {:kpro_MetadataResponse, brokers, _topics}} = :brod.get_metadata(endpoints)
+    {:ok, {:kpro_MetadataResponse, brokers, _topics}} = :brod_client.get_metadata(:kastlex, :undefined)
     render(conn, "index.json", brokers: brokers_metadata_to_map(brokers))
   end
 
