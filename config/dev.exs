@@ -12,6 +12,7 @@ config :kastlex, Kastlex.Endpoint,
   code_reloader: true,
   reloadable_paths: ["web"],
   reloadable_compilers: [:gettext, :phoenix, :elixir],
+  render_errors: [default_format: "json"],
   check_origin: false,
   watchers: []
 

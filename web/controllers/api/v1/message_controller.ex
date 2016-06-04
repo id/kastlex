@@ -4,9 +4,8 @@ defmodule Kastlex.API.V1.MessageController do
 
   use Kastlex.Web, :controller
 
-  def show(conn, %{"topic" => topic, "partition" => partition} = params) do
+  def show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
     {partition, _} = Integer.parse(partition)
-    {offset, _} = Integer.parse(Map.get(params, "offset"))
     max_wait_time = Integer.parse(Map.get(params, "max_wait_time", "1000"))
     min_bytes = Integer.parse(Map.get(params, "min_bytes", "1"))
     max_bytes = Integer.parse(Map.get(params, "max_bytes", "104857600")) # 100 kB
@@ -22,6 +21,11 @@ defmodule Kastlex.API.V1.MessageController do
                                       highWmOffset: highWmOffset,
                                       size: size,
                                       messages: messages_to_map(messages)})
+  end
+
+  def show(conn, _params) do
+    send_resp(conn, 400, "")
+    halt(conn)
   end
 
   defp messages_to_map(messages) do

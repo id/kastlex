@@ -5,6 +5,10 @@ defmodule Kastlex.ErrorView do
     %{error: "Not found"}
   end
 
+  def render("404.html", _assigns) do
+    "error: no route"
+  end
+
   def render("500.json", _assigns) do
     %{error: "Internal server error"}
   end
