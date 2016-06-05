@@ -7,16 +7,14 @@ defmodule Kastlex.API.V1.TopicController do
   def index(conn, _params) do
     {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, :undefined)
     {:ok, msg} = Poison.encode(topics_metadata_to_map(topics))
-    conn = resp(conn, 200, msg)
-    send_resp(conn)
+    send_resp(conn, 200, msg)
   end
 
   def show(conn, %{"topic" => name}) do
     {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, name)
     [topic] = topics_metadata_to_map(topics)
     {:ok, msg} = Poison.encode(topic)
-    conn = resp(conn, 200, msg)
-    send_resp(conn)
+    send_resp(conn, 200, msg)
   end
 
   defp topics_metadata_to_map(topics) do
