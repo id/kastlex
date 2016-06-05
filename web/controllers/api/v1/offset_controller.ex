@@ -1,4 +1,4 @@
-defmodule Kastlex.API.V1.OffsetsController do
+defmodule Kastlex.API.V1.OffsetController do
 
   require Logger
 
@@ -12,12 +12,16 @@ defmodule Kastlex.API.V1.OffsetsController do
       {:ok, pid} ->
         {:ok, offsets} = :brod_utils.fetch_offsets(pid, topic, partition, at, maxOffsets)
         {:ok, msg} = Poison.encode(offsets)
-        conn = resp(conn, 200, msg)
-        send_resp(conn)
+        send_resp(conn, 200, msg)
       {:error, :UnknownTopicOrPartition} ->
         {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
-        conn = resp(conn, 404, msg)
-        send_resp(conn)
+        send_resp(conn, 404, msg)
+      {:error, :LeaderNotAvailable} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown topic/partition or no leader for partition"})
+        send_resp(conn, 404, msg)
+      {:error, {:no_leader, _}} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown topic/partition or no leader for partition"})
+        send_resp(conn, 404, msg)
     end
   end
 

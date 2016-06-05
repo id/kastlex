@@ -11,8 +11,8 @@ defmodule Kastlex.Router do
     scope "/api/v1", as: :api_v1, alias: API.V1 do
       resources "/topics", TopicController, param: "topic", only: [:index, :show]
       resources "/brokers", BrokerController, only: [:index]
-      resources "/offsets/:topic", OffsetsController, param: "partition", only: [:show]
-      resources "/message/:topic/:partition", MessageController, param: "offset", only: [:create, :show]
+      resources "/offsets/:topic", OffsetController, param: "partition", only: [:show]
+      resources "/messages/:topic/:partition", MessageController, param: "offset", only: [:create, :show]
     end
   end
 

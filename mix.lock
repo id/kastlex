@@ -1,5 +1,5 @@
 %{"bbmustache": {:hex, :bbmustache, "1.0.3", "0fa96a57e0c7b53a5429d6d0be2c56699210dee97e63bc1c956726d99e7ea533", [:rebar], []},
-  "brod": {:hex, :brod, "2.1.2", "ab63bf7f80c66fd971fa788170ee89fc4a38cf89f6cf35a58b94ecdad7b3e112", [:make, :rebar3], [{:supervisor3, "1.1.1", [hex: :supervisor3, optional: false]}, {:kafka_protocol, "0.3.2", [hex: :kafka_protocol, optional: false]}]},
+  "brod": {:hex, :brod, "2.1.4", "a874ed885b1dafdceda4d5b58ea69d71f5894eb19bfa6fef7ba9cf37c054f0a2", [:make, :rebar3], [{:supervisor3, "1.1.1", [hex: :supervisor3, optional: false]}, {:kafka_protocol, "0.3.2", [hex: :kafka_protocol, optional: false]}]},
   "conform": {:hex, :conform, "0.17.0", "e3610a337b7c44beb829f176cbb0795f78fe53a0183a524a04e0ebe0f76f9113", [:mix], [{:neotoma, "~> 1.7.3", [hex: :neotoma, optional: false]}]},
   "connection": {:hex, :connection, "1.0.2", "f4a06dd3ecae4141aa66f94ce92ea4c4b8753069472814932f1cadbc3078ab80", [:mix], []},
   "cowboy": {:hex, :cowboy, "1.0.4", "a324a8df9f2316c833a470d918aaf73ae894278b8aa6226ce7a9bf699388f878", [:rebar, :make], [{:cowlib, "~> 1.0.0", [hex: :cowlib, optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, optional: false]}]},

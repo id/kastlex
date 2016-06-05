@@ -12,8 +12,8 @@ defmodule Kastlex.API.V1.MessageController do
     case :brod.produce_sync(:kastlex, topic, partition, key, value) do
       :ok ->
         send_resp(conn, 201, "")
-      {:error, :topic_not_found} ->
-        {:ok, msg} = Poison.encode(%{error: "unknown topic"})
+      {:error, :UnknownTopicOrPartition} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
         send_resp(conn, 404, msg)
       {:error, {:producer_not_found, _topic}} ->
         {:ok, msg} = Poison.encode(%{error: "unknown topic"})
@@ -23,7 +23,6 @@ defmodule Kastlex.API.V1.MessageController do
         send_resp(conn, 404, msg)
       {:error, reason} ->
         requestId = get_resp_header(conn, "x-request-id")
-        Logger.metadata([request_id: requestId])
         Logger.error "#{reason}"
         {:ok, msg} = Poison.encode(%{error: "service unavailable"})
         send_resp(conn, 503, msg)
@@ -49,12 +48,10 @@ defmodule Kastlex.API.V1.MessageController do
                                      highWmOffset: highWmOffset,
                                      size: size,
                                      messages: messages_to_map(messages)})
-        conn = resp(conn, 200, msg)
-        send_resp(conn)
+        send_resp(conn, 200, msg)
       {:error, :UnknownTopicOrPartition} ->
         {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
-        conn = resp(conn, 404, msg)
-        send_resp(conn)
+        send_resp(conn, 404, msg)
     end
   end
 
@@ -68,12 +65,16 @@ defmodule Kastlex.API.V1.MessageController do
     messages_to_map(tail, [%{offset: offset, size: size, crc: crc, key: key, value: value} | acc])
   end
 
+  defp messages_to_map([:incomplete_message | tail], acc) do
+    messages_to_map(tail, acc)
+  end
+
   defp messages_to_map([], acc) do
     acc
   end
 
   defp undefined_to_null(:undefined) do
-    ""
+    :null
   end
 
   defp undefined_to_null(x) do
