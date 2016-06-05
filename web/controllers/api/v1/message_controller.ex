@@ -1,8 +1,34 @@
+
 defmodule Kastlex.API.V1.MessageController do
 
   require Logger
 
   use Kastlex.Web, :controller
+
+  def create(conn, %{"topic" => topic, "partition" => partition} = params) do
+    {partition, _} = Integer.parse(partition)
+    key = Map.get(params, "key", "")
+    {:ok, value, conn} = read_body(conn)
+    case :brod.produce_sync(:kastlex, topic, partition, key, value) do
+      :ok ->
+        send_resp(conn, 201, "")
+      {:error, :topic_not_found} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown topic"})
+        send_resp(conn, 404, msg)
+      {:error, {:producer_not_found, _topic}} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown topic"})
+        send_resp(conn, 404, msg)
+      {:error, {:producer_not_found, _topic, _partition}} ->
+        {:ok, msg} = Poison.encode(%{error: "unknown partition"})
+        send_resp(conn, 404, msg)
+      {:error, reason} ->
+        requestId = get_resp_header(conn, "x-request-id")
+        Logger.metadata([request_id: requestId])
+        Logger.error "#{reason}"
+        {:ok, msg} = Poison.encode(%{error: "service unavailable"})
+        send_resp(conn, 503, msg)
+    end
+  end
 
   def show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
     {partition, _} = Integer.parse(partition)
@@ -37,11 +63,21 @@ defmodule Kastlex.API.V1.MessageController do
   end
 
   defp messages_to_map([{:kpro_Message, offset, size, crc, _magicByte, _attributes, key, value} | tail], acc) do
+    key = undefined_to_null(key)
+    value = undefined_to_null(value)
     messages_to_map(tail, [%{offset: offset, size: size, crc: crc, key: key, value: value} | acc])
   end
 
   defp messages_to_map([], acc) do
     acc
+  end
+
+  defp undefined_to_null(:undefined) do
+    ""
+  end
+
+  defp undefined_to_null(x) do
+    x
   end
 
 end
