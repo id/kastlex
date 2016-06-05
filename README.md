@@ -51,3 +51,4 @@ Value is request body.
 Example with cURL:
 
     curl -X POST localhost:4000/api/v1/messages/kastlex/0 -H "Content-type: application/binary" -d 1
+    curl -X POST localhost:4000/api/v1/messages/kastlex/0?key=2 -H "Content-type: application/binary" -d 2
