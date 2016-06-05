@@ -7,7 +7,7 @@ defmodule Kastlex.API.V1.OffsetController do
   def show(conn, %{"topic" => topic, "partition" => partition} = params) do
     {partition, _} = Integer.parse(partition)
     at = parse_at(Map.get(params, "at", "latest"))
-    {maxOffsets, _} = Integer.parse(Map.get(params, "maxOffsets", "1"))
+    {maxOffsets, _} = Integer.parse(Map.get(params, "max_offsets", "1"))
     case :brod_client.get_leader_connection(:kastlex, topic, partition) do
       {:ok, pid} ->
         {:ok, offsets} = :brod_utils.fetch_offsets(pid, topic, partition, at, maxOffsets)
