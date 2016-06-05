@@ -44,9 +44,9 @@ Optional parameters:
 
     POST  /api/v1/messages/:topic/:partition
 
-Use "Content-type: application/binary".
-Key is supplied as query parameter "key".
-Value is request body.
+Use "Content-type: application/binary".  
+Key is supplied as query parameter "key".  
+Value is request body.  
 
 Example with cURL:
 
