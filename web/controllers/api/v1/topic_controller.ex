@@ -4,10 +4,21 @@ defmodule Kastlex.API.V1.TopicController do
 
   use Kastlex.Web, :controller
 
-  def index(conn, _params) do
-    {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, :undefined)
-    {:ok, msg} = Poison.encode(topics_metadata_to_map(topics))
-    send_resp(conn, 200, msg)
+  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler,
+      one_of: [%{default: [:get_topic]}, %{admin: [:list_topics]}]
+
+  def index(conn, params) do
+    {:ok, claims} = Guardian.Plug.claims(conn)
+    pem = Guardian.Permissions.from_claims(claims, :admin)
+    case Guardian.Permissions.all?(pem, [:list_topics], :admin) do
+      true ->
+        {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, :undefined)
+        {:ok, msg} = Poison.encode(topics_metadata_to_map(topics))
+        send_resp(conn, 200, msg)
+      false ->
+        Kastlex.AuthErrorHandler.unauthorized(conn, params)
+    end
   end
 
   def show(conn, %{"topic" => name}) do

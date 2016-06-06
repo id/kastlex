@@ -12,7 +12,6 @@ config :kastlex, Kastlex.Endpoint,
   code_reloader: true,
   reloadable_paths: ["web"],
   reloadable_compilers: [:gettext, :phoenix, :elixir],
-  render_errors: [default_format: "json"],
   check_origin: false,
   watchers: []
 
@@ -24,9 +23,6 @@ config :kastlex, Kastlex.Endpoint,
       ~r{web/views/.*(ex)$}
     ]
   ]
-
-# Do not include metadata nor timestamps in development logs
-config :logger, :console, format: "$time [$level] $metadata $message\n"
 
 # Set a higher stacktrace during development.
 # Do not configure such in production as keeping

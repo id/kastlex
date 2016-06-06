@@ -37,7 +37,8 @@ defmodule Kastlex.Mixfile do
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
      {:brod, "~> 2.1"},
-     {:exrm, "~> 0.19.9"}]
+     {:exrm, "~> 0.19.9"},
+     {:guardian, "~> 0.12.0"}]
   end
 
   # Aliases are shortcut or tasks specific to the current project.
