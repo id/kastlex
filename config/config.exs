@@ -36,5 +36,5 @@ config :guardian, Guardian,
   verify_issuer: true, # optional
   secret_key: "yCWR+HlWNjnBzh1UsGducT9Irq8zmAWxMbPUV+e3S70cPXeJRMz62y5xDtB3qCRL",
   serializer: Kastlex.GuardianSerializer,
-  permissions: %{default: [:get_topic, :offsets, :fetch, :produce],
+  permissions: %{client: [:get_topic, :offsets, :fetch, :produce],
                  admin: [:list_topics, :list_brokers]}

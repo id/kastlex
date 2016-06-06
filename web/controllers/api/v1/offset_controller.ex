@@ -4,6 +4,9 @@ defmodule Kastlex.API.V1.OffsetController do
 
   use Kastlex.Web, :controller
 
+  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler, client: [:offsets]
+
   def show(conn, %{"topic" => topic, "partition" => partition} = params) do
     {partition, _} = Integer.parse(partition)
     at = parse_at(Map.get(params, "at", "latest"))

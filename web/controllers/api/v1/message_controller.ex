@@ -5,7 +5,23 @@ defmodule Kastlex.API.V1.MessageController do
 
   use Kastlex.Web, :controller
 
-  def create(conn, %{"topic" => topic, "partition" => partition} = params) do
+  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler,
+    one_of: [%{client: [:fetch]}, %{client: [:produce]}]
+
+  def create(conn, params) do
+    {:ok, claims} = Guardian.Plug.claims(conn)
+    pem = Guardian.Permissions.from_claims(claims, :client)
+    case Guardian.Permissions.all?(pem, [:produce], :client) do
+      true ->
+        # TODO: check topic
+        do_create(conn, params)
+      false ->
+        Kastlex.AuthErrorHandler.unauthorized(conn, params)
+    end
+  end
+
+  defp do_create(conn, %{"topic" => topic, "partition" => partition} = params) do
     {partition, _} = Integer.parse(partition)
     key = Map.get(params, "key", "")
     {:ok, value, conn} = read_body(conn)
@@ -29,7 +45,19 @@ defmodule Kastlex.API.V1.MessageController do
     end
   end
 
-  def show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
+  def show(conn, params) do
+    {:ok, claims} = Guardian.Plug.claims(conn)
+    pem = Guardian.Permissions.from_claims(claims, :client)
+    case Guardian.Permissions.all?(pem, [:fetch], :client) do
+      true ->
+        # TODO: check topic
+        do_show(conn, params)
+      false ->
+        Kastlex.AuthErrorHandler.unauthorized(conn, params)
+    end
+  end
+
+  defp do_show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
     {partition, _} = Integer.parse(partition)
     {offset, _} = Integer.parse(offset)
     {max_wait_time, _} = Integer.parse(Map.get(params, "max_wait_time", "1000"))

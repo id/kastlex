@@ -4,6 +4,9 @@ defmodule Kastlex.API.V1.BrokerController do
 
   use Kastlex.Web, :controller
 
+  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler, admin: [:list_brokers]
+
   def index(conn, _params) do
     {:ok, {:kpro_MetadataResponse, brokers, _topics}} = :brod_client.get_metadata(:kastlex, :undefined)
     {:ok, msg} = Poison.encode(brokers_metadata_to_map(brokers))

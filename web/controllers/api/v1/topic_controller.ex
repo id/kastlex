@@ -6,7 +6,7 @@ defmodule Kastlex.API.V1.TopicController do
 
   plug Guardian.Plug.EnsureAuthenticated
   plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler,
-      one_of: [%{default: [:get_topic]}, %{admin: [:list_topics]}]
+      one_of: [%{client: [:get_topic]}, %{admin: [:list_topics]}]
 
   def index(conn, params) do
     {:ok, claims} = Guardian.Plug.claims(conn)
