@@ -14,8 +14,7 @@ defmodule Kastlex.API.V1.OffsetController do
     case :brod_client.get_leader_connection(:kastlex, topic, partition) do
       {:ok, pid} ->
         {:ok, offsets} = :brod_utils.fetch_offsets(pid, topic, partition, at, maxOffsets)
-        {:ok, msg} = Poison.encode(offsets)
-        send_resp(conn, 200, msg)
+        json(conn, offsets)
       {:error, :UnknownTopicOrPartition} ->
         {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
         send_resp(conn, 404, msg)

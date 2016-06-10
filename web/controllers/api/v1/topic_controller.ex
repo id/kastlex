@@ -14,8 +14,7 @@ defmodule Kastlex.API.V1.TopicController do
     case Guardian.Permissions.all?(pem, [:list_topics], :admin) do
       true ->
         {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, :undefined)
-        {:ok, msg} = Poison.encode(topics_metadata_to_map(topics))
-        send_resp(conn, 200, msg)
+        json(conn, topics_metadata_to_map(topics))
       false ->
         Kastlex.AuthErrorHandler.unauthorized(conn, params)
     end
@@ -24,8 +23,7 @@ defmodule Kastlex.API.V1.TopicController do
   def show(conn, %{"topic" => name}) do
     {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, name)
     [topic] = topics_metadata_to_map(topics)
-    {:ok, msg} = Poison.encode(topic)
-    send_resp(conn, 200, msg)
+    json(conn, topic)
   end
 
   defp topics_metadata_to_map(topics) do

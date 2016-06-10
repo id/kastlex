@@ -48,7 +48,23 @@ Use `Content-type: application/binary`.
 Key is supplied as query parameter `key`.  
 Value is request body.  
 
-Example with cURL:
+## Authentication
+Authentication is a courtesy of [Guardian](https://github.com/ueberauth/guardian).
 
-    curl -X POST localhost:4000/api/v1/messages/kastlex/0 -H "Content-type: application/binary" -d 1
-    curl -X POST localhost:4000/api/v1/messages/kastlex/0?key=2 -H "Content-type: application/binary" -d 2
+### Generating tokens
+Read only access
+
+    {:ok, token, perms} = Guardian.encode_and_sign("username", :token, perms: %{ client: [:get_topic, :offsets, :fetch]})
+
+Full access
+
+    {:ok, token, perms} = Guardian.encode_and_sign("username", :token, perms: %{ admin: Guardian.Permissions.max, client: [:get_topic, :offsets, :fetch, :produce]})
+
+## cURL examples
+
+    export JWT='token generated above'
+    curl -H "Authorization: $JWT" localhost:4000/api/v1/brokers
+    curl -H "Authorization: $JWT" localhost:4000/api/v1/topics
+    curl -H "Authorization: $JWT" localhost:4000/api/v1/topics/my-topic
+    curl -H "Authorization: $JWT" -X POST localhost:4000/api/v1/messages/my-topic/0 -H "Content-type: application/binary" -d 1
+    curl -H "Authorization: $JWT" -X POST localhost:4000/api/v1/messages/my-topic/0?key=2 -H "Content-type: application/binary" -d 2
