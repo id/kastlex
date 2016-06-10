@@ -2,6 +2,7 @@ defmodule Kastlex.GuardianSerializer do
   @behaviour Guardian.Serializer
 
   def for_token(%{user: user, topics: topics}), do: { :ok, "user: #{user}, topics: #{topics}" }
+  def for_token(%{user: user}), do: { :ok, "user: #{user}, topics: *" }
   def for_token(_), do: { :error, "Unknown resource type" }
 
   def from_token(subject) do

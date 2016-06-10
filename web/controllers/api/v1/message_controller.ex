@@ -5,7 +5,7 @@ defmodule Kastlex.API.V1.MessageController do
 
   use Kastlex.Web, :controller
 
-  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.EnsureAuthenticated, handler: Kastlex.AuthErrorHandler
 
   plug Guardian.Plug.EnsurePermissions,
     %{handler: Kastlex.AuthErrorHandler, client: [:fetch]}

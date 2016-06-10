@@ -4,7 +4,7 @@ defmodule Kastlex.API.V1.TokenController do
 
   use Kastlex.Web, :controller
 
-  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.EnsureAuthenticated, handler: Kastlex.AuthErrorHandler
   plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler, admin: [:issue_token]
 
   def create(conn, _params) do
