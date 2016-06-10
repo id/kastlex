@@ -19,6 +19,17 @@ defmodule Kastlex.TopicControllerTest do
     assert is_list(json_response(conn, 200))
   end
 
+  test "does not list all entries on index when permissions are not set", _params do
+    subj = %{user: "test", topics: "*"}
+    perms = %{client: [:get_topic]}
+    {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
+    conn = conn()
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", token)
+      |> get(api_v1_topic_path(conn, :index))
+    assert json_response(conn, 403)
+  end
+
   test "show chosen resource", _params do
     topic = "kastlex"
     subj = %{user: "test", topics: topic}
@@ -34,7 +45,7 @@ defmodule Kastlex.TopicControllerTest do
   test "does not show resource when permissions are wrong", _params do
     topic = "kastlex"
     subj = %{user: "test", topics: topic}
-    perms = %{client: [:offsets]}
+    perms = %{admin: [:list_topics]}
     {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
     conn = conn()
       |> put_req_header("accept", "application/json")
