@@ -15,6 +15,7 @@ defmodule Kastlex.Router do
       resources "/brokers", BrokerController, only: [:index]
       resources "/offsets/:topic", OffsetController, param: "partition", only: [:show]
       resources "/messages/:topic/:partition", MessageController, param: "offset", only: [:create, :show]
+      resources "/tokens", TokenController, only: [:create]
     end
   end
 

@@ -52,19 +52,40 @@ Value is request body.
 Authentication is a courtesy of [Guardian](https://github.com/ueberauth/guardian).
 
 ### Generating tokens
-Read only access
+Access to topics in encoded in the "subject" field of JWT.
 
-    {:ok, token, perms} = Guardian.encode_and_sign("username", :token, perms: %{ client: [:get_topic, :offsets, :fetch]})
+Admin access:
 
-Full access
+    subject = %{user: "admin"}
+    perms = %{admin: Guardian.Permissions.max}
+    {:ok, token, _} = Guardian.encode_and_sign(subject, :token, perms: perms)
 
-    {:ok, token, perms} = Guardian.encode_and_sign("username", :token, perms: %{ admin: Guardian.Permissions.max, client: [:get_topic, :offsets, :fetch, :produce]})
+Read only access to topics my-topic1 and my-topic2:
+
+    subject = %{user: "user", topics: "my-topic1,my-topic2"]}
+    perms = %{client: [:get_topic, :offsets, :fetch]}
+    {:ok, token, _} = Guardian.encode_and_sign(subject, :token, perms: perms)
+
+Read/Write access to all topics:
+
+    subject = %{user: "user", topics: "*"}
+    perms = %{client: [:get_topic, :offsets, :fetch, :produce]}
+    {:ok, token, _} = Guardian.encode_and_sign(subject, :token, perms: perms)
 
 ## cURL examples
+First generate an admin token with all permissions:
 
-    export JWT='token generated above'
-    curl -H "Authorization: $JWT" localhost:4000/api/v1/brokers
-    curl -H "Authorization: $JWT" localhost:4000/api/v1/topics
-    curl -H "Authorization: $JWT" localhost:4000/api/v1/topics/my-topic
-    curl -H "Authorization: $JWT" -X POST localhost:4000/api/v1/messages/my-topic/0 -H "Content-type: application/binary" -d 1
-    curl -H "Authorization: $JWT" -X POST localhost:4000/api/v1/messages/my-topic/0?key=2 -H "Content-type: application/binary" -d 2
+    subject = %{user: "admin"}
+    perms = %{admin: Guardian.Permissions.max}
+    {:ok, token, _} = Guardian.encode_and_sign(subject, :token, perms: perms)
+
+Then you can use it to issue other tokens since it includes :issue_token permission:
+
+    export JWT_ADMIN='token generated above'
+    JWT_CLIENT=$(curl -s -H "Authorization: $JWT_ADMIN" localhost:4000/api/v1/tokens -H "Content-type: application/binary" -d '{"user":"me","topics":"*","perms":{"client":["produce", "fetch", "offsets", "get_topic"]}}' | jq .token | tr -d \")
+    curl -H "Authorization: $JWT_ADMIN" localhost:4000/api/v1/brokers
+    curl -H "Authorization: $JWT_ADMIN" localhost:4000/api/v1/topics
+    curl -H "Authorization: $JWT_CLIENT" localhost:4000/api/v1/topics/my-topic
+    curl -H "Authorization: $JWT_CLIENT" localhost:4000/api/v1/messages/my-topic/0 -H "Content-type: application/binary" -d 1
+    curl -H "Authorization: $JWT_CLIENT" localhost:4000/api/v1/messages/my-topic/0?key=2 -H "Content-type: application/binary" -d 2
+    curl -H "Authorization: $JWT_CLIENT" localhost:4000/api/v1/messages/my-topic/0/0

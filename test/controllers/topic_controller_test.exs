@@ -1,59 +1,69 @@
 defmodule Kastlex.TopicControllerTest do
   use Kastlex.ConnCase
 
-  alias Kastlex.Topic
   @valid_attrs %{}
   @invalid_attrs %{}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  setup do
+    {:ok, %{}}
   end
 
-  test "lists all entries on index", %{conn: conn} do
-    conn = get conn, topic_path(conn, :index)
-    assert json_response(conn, 200)["data"] == []
+  test "lists all entries on index", _params do
+    subj = %{user: "test", topics: "*"}
+    perms = %{admin: [:list_topics]}
+    {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
+    conn = conn()
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", token)
+      |> get(api_v1_topic_path(conn, :index))
+    assert is_list(json_response(conn, 200))
   end
 
-  test "shows chosen resource", %{conn: conn} do
-    topic = Repo.insert! %Topic{}
-    conn = get conn, topic_path(conn, :show, topic)
-    assert json_response(conn, 200)["data"] == %{"id" => topic.id}
+  test "does not list all entries on index when permissions are not set", _params do
+    subj = %{user: "test", topics: "*"}
+    perms = %{client: [:get_topic]}
+    {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
+    conn = conn()
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", token)
+      |> get(api_v1_topic_path(conn, :index))
+    assert json_response(conn, 403)
   end
 
-  test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
-    assert_error_sent 404, fn ->
-      get conn, topic_path(conn, :show, -1)
-    end
+  test "show chosen resource", _params do
+    topic = "kastlex"
+    subj = %{user: "test", topics: topic}
+    perms = %{client: [:get_topic]}
+    {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
+    conn = conn()
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", token)
+      |> get(api_v1_topic_path(conn, :show, topic))
+    assert json_response(conn, 200)["topic"] == topic
   end
 
-  test "creates and renders resource when data is valid", %{conn: conn} do
-    conn = post conn, topic_path(conn, :create), topic: @valid_attrs
-    assert json_response(conn, 201)["data"]["id"]
-    assert Repo.get_by(Topic, @valid_attrs)
+  test "does not show resource when permissions are wrong", _params do
+    topic = "kastlex"
+    subj = %{user: "test", topics: topic}
+    perms = %{admin: [:list_topics]}
+    {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
+    conn = conn()
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", token)
+      |> get(api_v1_topic_path(conn, :show, topic))
+    assert json_response(conn, 403)
   end
 
-  test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, topic_path(conn, :create), topic: @invalid_attrs
-    assert json_response(conn, 422)["errors"] != %{}
+  test "does not show resource when it is not listed in subject", _params do
+    topic = "kastlex"
+    subj = %{user: "test", topics: "foo"}
+    perms = %{client: [:get_topic]}
+    {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
+    conn = conn()
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", token)
+      |> get(api_v1_topic_path(conn, :show, topic))
+    assert json_response(conn, 403)
   end
 
-  test "updates and renders chosen resource when data is valid", %{conn: conn} do
-    topic = Repo.insert! %Topic{}
-    conn = put conn, topic_path(conn, :update, topic), topic: @valid_attrs
-    assert json_response(conn, 200)["data"]["id"]
-    assert Repo.get_by(Topic, @valid_attrs)
-  end
-
-  test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
-    topic = Repo.insert! %Topic{}
-    conn = put conn, topic_path(conn, :update, topic), topic: @invalid_attrs
-    assert json_response(conn, 422)["errors"] != %{}
-  end
-
-  test "deletes chosen resource", %{conn: conn} do
-    topic = Repo.insert! %Topic{}
-    conn = delete conn, topic_path(conn, :delete, topic)
-    assert response(conn, 204)
-    refute Repo.get(Topic, topic.id)
-  end
 end
