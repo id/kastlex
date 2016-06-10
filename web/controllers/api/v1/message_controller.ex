@@ -72,7 +72,7 @@ defmodule Kastlex.API.V1.MessageController do
     messages_to_map(tail, [%{offset: offset, size: size, crc: crc, key: key, value: value} | acc])
   end
 
-  defp undefined_to_null(:undefined), do: :null
+  defp undefined_to_null(:undefined), do: nil
   defp undefined_to_null(x),          do: x
 
 end
