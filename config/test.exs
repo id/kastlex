@@ -17,3 +17,9 @@ config :kastlex, Kastlex.Repo,
   database: "kastlex_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :brod, :clients,
+  kastlex: [
+    endpoints: ["localhost": 9092],
+    auto_start_producers: true
+  ]

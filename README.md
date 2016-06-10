@@ -52,13 +52,15 @@ Value is request body.
 Authentication is a courtesy of [Guardian](https://github.com/ueberauth/guardian).
 
 ### Generating tokens
-Read only access
+Access to topics in encoded in the "subject" field of JWT.
 
-    {:ok, token, perms} = Guardian.encode_and_sign("username", :token, perms: %{ client: [:get_topic, :offsets, :fetch]})
+Read only access to topics my-topic1 and my-topic2
 
-Full access
+    {:ok, token, perms} = Guardian.encode_and_sign("user: username, topics: my-topic1,my-topic2", :token, perms: %{ client: [:get_topic, :offsets, :fetch]})
 
-    {:ok, token, perms} = Guardian.encode_and_sign("username", :token, perms: %{ admin: Guardian.Permissions.max, client: [:get_topic, :offsets, :fetch, :produce]})
+Full access everywhere
+
+    {:ok, token, perms} = Guardian.encode_and_sign("user: username, topics: *", :token, perms: %{ admin: Guardian.Permissions.max, client: [:get_topic, :offsets, :fetch, :produce]})
 
 ## cURL examples
 

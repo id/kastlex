@@ -20,10 +20,25 @@ defmodule Kastlex.API.V1.TopicController do
     end
   end
 
-  def show(conn, %{"topic" => name}) do
-    {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, name)
-    [topic] = topics_metadata_to_map(topics)
-    json(conn, topic)
+  def show(conn, %{"topic" => name} = params) do
+    {:ok, claims} = Guardian.Plug.claims(conn)
+    case Guardian.serializer.from_token(claims["sub"]) do
+      {:ok, %{:topics => topics}} ->
+        case can_read_topic(topics, name) do
+          true ->
+            {:ok, {:kpro_MetadataResponse, _brokers, topics}} = :brod_client.get_metadata(:kastlex, name)
+            [topic] = topics_metadata_to_map(topics)
+            json(conn, topic)
+          false ->
+            Kastlex.AuthErrorHandler.unauthorized(conn, params)
+        end
+      {:error, reason} ->
+        Kastlex.AuthErrorHandler.unauthorized(conn, params)
+    end
+  end
+
+  defp can_read_topic(topics, topic) do
+    :lists.member("*", topics) or :lists.member(topic, topics)
   end
 
   defp topics_metadata_to_map(topics) do
