@@ -10,8 +10,8 @@ defmodule Kastlex.Plug.Authorize do
   def call(%Plug.Conn{params: %{"topic" => topic},
                       private: private} = conn, params) do
     %{:guardian_default_resource => %{topics: allowed_topics}} = private
-    case :lists.member("*", allowed_topics) or :lists.member(topic, allowed_topics) do
-      true -> conn
+    case "*" in allowed_topics or topic in allowed_topics do
+      true  -> conn
       false -> handle_error(conn, params)
     end
   end
