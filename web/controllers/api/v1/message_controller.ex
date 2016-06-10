@@ -1,63 +1,42 @@
-
 defmodule Kastlex.API.V1.MessageController do
 
   require Logger
+  import Kastlex.Helper
 
   use Kastlex.Web, :controller
 
   plug Guardian.Plug.EnsureAuthenticated
-  plug Guardian.Plug.EnsurePermissions, handler: Kastlex.AuthErrorHandler,
-    one_of: [%{client: [:fetch]}, %{client: [:produce]}]
 
-  def create(conn, params) do
-    {:ok, claims} = Guardian.Plug.claims(conn)
-    pem = Guardian.Permissions.from_claims(claims, :client)
-    case Guardian.Permissions.all?(pem, [:produce], :client) do
-      true ->
-        # TODO: check topic
-        do_create(conn, params)
-      false ->
-        Kastlex.AuthErrorHandler.unauthorized(conn, params)
-    end
-  end
+  plug Guardian.Plug.EnsurePermissions,
+    %{handler: Kastlex.AuthErrorHandler, client: [:fetch]}
+    when action in [:show]
 
-  defp do_create(conn, %{"topic" => topic, "partition" => partition} = params) do
+  plug Guardian.Plug.EnsurePermissions,
+    %{handler: Kastlex.AuthErrorHandler, client: [:produce]}
+    when action in [:create]
+
+  plug Kastlex.Plug.Authorize
+
+  def create(conn, %{"topic" => topic, "partition" => partition} = params) do
     {partition, _} = Integer.parse(partition)
     key = Map.get(params, "key", "")
     {:ok, value, conn} = read_body(conn)
     case :brod.produce_sync(:kastlex, topic, partition, key, value) do
       :ok ->
-        send_resp(conn, 201, "")
+        send_resp(conn, 204, "")
       {:error, :UnknownTopicOrPartition} ->
-        {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
-        send_resp(conn, 404, msg)
+        send_json(conn, 404, %{error: "unknown topic or partition"})
       {:error, {:producer_not_found, _topic}} ->
-        {:ok, msg} = Poison.encode(%{error: "unknown topic"})
-        send_resp(conn, 404, msg)
+        send_json(conn, 404, %{error: "unknown topic"})
       {:error, {:producer_not_found, _topic, _partition}} ->
-        {:ok, msg} = Poison.encode(%{error: "unknown partition"})
-        send_resp(conn, 404, msg)
+        send_json(conn, 404, %{error: "unknown partition"})
       {:error, reason} ->
-        requestId = get_resp_header(conn, "x-request-id")
         Logger.error "#{reason}"
-        {:ok, msg} = Poison.encode(%{error: "service unavailable"})
-        send_resp(conn, 503, msg)
+        send_json(conn, 503, %{error: "service unavailable"})
     end
   end
 
-  def show(conn, params) do
-    {:ok, claims} = Guardian.Plug.claims(conn)
-    pem = Guardian.Permissions.from_claims(claims, :client)
-    case Guardian.Permissions.all?(pem, [:fetch], :client) do
-      true ->
-        # TODO: check topic
-        do_show(conn, params)
-      false ->
-        Kastlex.AuthErrorHandler.unauthorized(conn, params)
-    end
-  end
-
-  defp do_show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
+  def show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
     {partition, _} = Integer.parse(partition)
     {offset, _} = Integer.parse(offset)
     {max_wait_time, _} = Integer.parse(Map.get(params, "max_wait_time", "1000"))
@@ -72,41 +51,28 @@ defmodule Kastlex.API.V1.MessageController do
         {:kpro_FetchResponse, [topicFetchData]} = response
         {:kpro_FetchResponseTopic, _, [partitionFetchData]} = topicFetchData
         {:kpro_FetchResponsePartition, _, errorCode, highWmOffset, size, messages} = partitionFetchData
-        {:ok, msg} = Poison.encode(%{errorCode: errorCode,
-                                     highWmOffset: highWmOffset,
-                                     size: size,
-                                     messages: messages_to_map(messages)})
-        send_resp(conn, 200, msg)
+        resp = %{errorCode: errorCode,
+                 highWmOffset: highWmOffset,
+                 size: size,
+                 messages: messages_to_map(messages)}
+        json(conn, resp)
       {:error, :UnknownTopicOrPartition} ->
-        {:ok, msg} = Poison.encode(%{error: "unknown topic or partition"})
-        send_resp(conn, 404, msg)
+        send_json(conn, 404, %{error: "unknown topic or partition"})
     end
   end
 
-  defp messages_to_map(messages) do
-    messages_to_map(messages, [])
-  end
+  defp messages_to_map(messages), do: messages_to_map(messages, [])
 
-  defp messages_to_map([{:kpro_Message, offset, size, crc, _magicByte, _attributes, key, value} | tail], acc) do
+  defp messages_to_map([], acc), do: acc
+  defp messages_to_map([:incomplete_message | tail], acc), do: messages_to_map(tail, acc)
+  defp messages_to_map([msg | tail], acc) do
+    {:kpro_Message, offset, size, crc, _magicByte, _attributes, key, value} = msg
     key = undefined_to_null(key)
     value = undefined_to_null(value)
     messages_to_map(tail, [%{offset: offset, size: size, crc: crc, key: key, value: value} | acc])
   end
 
-  defp messages_to_map([:incomplete_message | tail], acc) do
-    messages_to_map(tail, acc)
-  end
-
-  defp messages_to_map([], acc) do
-    acc
-  end
-
-  defp undefined_to_null(:undefined) do
-    :null
-  end
-
-  defp undefined_to_null(x) do
-    x
-  end
+  defp undefined_to_null(:undefined), do: :null
+  defp undefined_to_null(x),          do: x
 
 end
