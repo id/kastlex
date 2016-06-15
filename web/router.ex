@@ -13,7 +13,6 @@ defmodule Kastlex.Router do
     scope "/api/v1", as: :api_v1, alias: API.V1 do
       get  "/topics", TopicController, :index
       get  "/topics/:topic", TopicController, :show
-      get  "/topics/:topic/urp", TopicController, :urp
       get  "/brokers", BrokerController, :index
       get  "/brokers/:broker", BrokerController, :show
       get  "/offsets/:topic/:partition", OffsetController, :show
