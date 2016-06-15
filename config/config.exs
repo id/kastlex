@@ -35,8 +35,8 @@ config :guardian, Guardian,
   verify_issuer: true, # optional
   secret_key: "yCWR+HlWNjnBzh1UsGducT9Irq8zmAWxMbPUV+e3S70cPXeJRMz62y5xDtB3qCRL",
   serializer: Kastlex.GuardianSerializer,
-  permissions: %{client: [:get_topic, :offsets, :fetch, :produce],
-                 admin: [:list_topics, :list_brokers, :issue_token]}
+  permissions: %{client: [:show_topic, :show_urp, :offsets, :fetch, :produce],
+                 admin: [:list_topics, :list_brokers, :issue_token, :list_urps]}
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

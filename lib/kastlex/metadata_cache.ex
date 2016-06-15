@@ -24,7 +24,7 @@ defmodule Kastlex.MetadataCache do
   end
 
   def init(:ok) do
-    tab = :ets.new(@table, [:set, :protected, :named_table])
+    :ets.new(@table, [:set, :protected, :named_table])
     :ets.insert(@table, {:ts, :erlang.system_time()})
     :ets.insert(@table, {:brokers, []})
     :ets.insert(@table, {:topics, []})
@@ -39,7 +39,7 @@ defmodule Kastlex.MetadataCache do
     :ets.insert(@table, {:ts, :erlang.system_time()})
     :ets.insert(@table, {:brokers, brokers_metadata_to_map(brokers)})
     :ets.insert(@table, {:topics, topics_metadata_to_map(topics)})
-    :erlang.send_after(Map.fetch!(state, :refresh_timeout_ms), Kernel.self(), @refresh)
+    :erlang.send_after(state.refresh_timeout_ms, Kernel.self(), @refresh)
     {:noreply, state}
   end
 
@@ -59,8 +59,10 @@ defmodule Kastlex.MetadataCache do
   defp topics_metadata_to_map(topics), do: topics_metadata_to_map(topics, [])
 
   defp topics_metadata_to_map([], acc), do: acc
-  defp topics_metadata_to_map([{:kpro_TopicMetadata, _, topic, partitions} | tail], acc) do
-    topics_metadata_to_map(tail, [%{topic: topic, partitions: partition_metadata_to_map(partitions)} | acc])
+  defp topics_metadata_to_map([{:kpro_TopicMetadata, error_code, topic, partitions} | tail], acc) do
+    topics_metadata_to_map(tail, [%{topic: topic,
+                                    error_code: error_code,
+                                    partitions: partition_metadata_to_map(partitions)} | acc])
   end
 
   defp partition_metadata_to_map(partitions) do
@@ -69,8 +71,11 @@ defmodule Kastlex.MetadataCache do
 
   defp partition_metadata_to_map([], acc), do: acc
   defp partition_metadata_to_map([p | tail], acc) do
-    {:kpro_PartitionMetadata, _, partition, leader, replicas, isr} = p
-    map = %{partition: partition, leader: leader, replicas: replicas, isr: isr}
-    partition_metadata_to_map(tail, [map | acc])
+    {:kpro_PartitionMetadata, error_code, partition, leader, replicas, isr} = p
+    partition_metadata_to_map(tail, [%{partition: partition,
+                                       error_code: error_code,
+                                       leader: leader,
+                                       replicas: replicas,
+                                       isr: isr} | acc])
   end
 end

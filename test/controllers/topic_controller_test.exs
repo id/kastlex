@@ -21,7 +21,7 @@ defmodule Kastlex.TopicControllerTest do
 
   test "does not list all entries on index when permissions are not set", _params do
     subj = %{user: "test", topics: "*"}
-    perms = %{client: [:get_topic]}
+    perms = %{client: [:show_topic]}
     {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
     conn = conn()
       |> put_req_header("accept", "application/json")
@@ -33,7 +33,7 @@ defmodule Kastlex.TopicControllerTest do
   test "show chosen resource", _params do
     topic = "kastlex"
     subj = %{user: "test", topics: topic}
-    perms = %{client: [:get_topic]}
+    perms = %{client: [:show_topic]}
     {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
     conn = conn()
       |> put_req_header("accept", "application/json")
@@ -57,7 +57,7 @@ defmodule Kastlex.TopicControllerTest do
   test "does not show resource when it is not listed in subject", _params do
     topic = "kastlex"
     subj = %{user: "test", topics: "foo"}
-    perms = %{client: [:get_topic]}
+    perms = %{client: [:show_topic]}
     {:ok, token, _claims} = Guardian.encode_and_sign(subj, :token, perms: perms)
     conn = conn()
       |> put_req_header("accept", "application/json")

@@ -43,3 +43,6 @@ config :brod, :clients,
     endpoints: ["localhost": 9092],
     auto_start_producers: true
   ]
+
+config :kastlex, Kastlex.MetadataCache,
+  refresh_timeout_ms: 5000

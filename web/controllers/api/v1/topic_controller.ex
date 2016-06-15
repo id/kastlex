@@ -12,7 +12,7 @@ defmodule Kastlex.API.V1.TopicController do
     when action in [:index]
 
   plug Guardian.Plug.EnsurePermissions,
-    %{handler: Kastlex.AuthErrorHandler, client: [:get_topic]}
+    %{handler: Kastlex.AuthErrorHandler, client: [:show_topic]}
     when action in [:show]
 
   plug Kastlex.Plug.Authorize when action in [:show]

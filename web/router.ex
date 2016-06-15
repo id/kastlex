@@ -11,14 +11,17 @@ defmodule Kastlex.Router do
     pipe_through :api
 
     scope "/api/v1", as: :api_v1, alias: API.V1 do
-      get "/topics", TopicController, :index
-      get "/topics/:topic", TopicController, :show
-      get "/brokers", BrokerController, :index
-      get "/brokers/:broker", BrokerController, :show
-      get "/offsets/:topic/:partition", OffsetController, :show
+      get  "/topics", TopicController, :index
+      get  "/topics/:topic", TopicController, :show
+      get  "/topics/:topic/urp", TopicController, :urp
+      get  "/brokers", BrokerController, :index
+      get  "/brokers/:broker", BrokerController, :show
+      get  "/offsets/:topic/:partition", OffsetController, :show
       post "/messages/:topic/:partition", MessageController, :create
-      get "/messages/:topic/:partition/:offset", MessageController, :show
+      get  "/messages/:topic/:partition/:offset", MessageController, :show
       post "/tokens", TokenController, :create
+      get  "/urp", UrpController, :index
+      get  "/urp/:topic", UrpController, :show
     end
   end
 
