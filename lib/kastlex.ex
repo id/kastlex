@@ -11,8 +11,8 @@ defmodule Kastlex do
       supervisor(Kastlex.Endpoint, []),
       # Start the Ecto repository
       supervisor(Kastlex.Repo, []),
-      # Here you could define other workers and supervisors as children
-      # worker(Kastlex.Worker, [arg1, arg2, arg3]),
+      # Start the metadata cache worker
+      worker(Kastlex.MetadataCache, []),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

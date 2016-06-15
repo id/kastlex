@@ -14,14 +14,13 @@ config :kastlex, Kastlex.Endpoint,
   pubsub: [name: Kastlex.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+config :kastlex, Kastlex.MetadataCache,
+  refresh_timeout_ms: 30000
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time [$level] $metadata $message\n",
   metadata: [:request_id]
-
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
 
 # Configure phoenix generators
 config :phoenix, :generators,
@@ -38,3 +37,8 @@ config :guardian, Guardian,
   serializer: Kastlex.GuardianSerializer,
   permissions: %{client: [:get_topic, :offsets, :fetch, :produce],
                  admin: [:list_topics, :list_brokers, :issue_token]}
+
+# Import environment specific config. This must remain at the bottom
+# of this file so it overrides the configuration defined above.
+import_config "#{Mix.env}.exs"
+

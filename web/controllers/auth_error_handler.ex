@@ -8,7 +8,6 @@ defmodule Kastlex.AuthErrorHandler do
   end
 
   def unauthorized(conn, _params) do
-    IO.inspect conn
     send_json(conn, 403, %{error: "Unauthorized"})
   end
 
