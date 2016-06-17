@@ -36,4 +36,7 @@ config :brod, :clients,
   ]
 
 config :kastlex, Kastlex.MetadataCache,
-  refresh_timeout_ms: 5000
+  refresh_timeout_ms: 5000,
+  zk_cluster: ["localhost": 2181],
+  zk_chroot: "/",
+  zk_session_timeout: 30000
