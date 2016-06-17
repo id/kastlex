@@ -9,7 +9,6 @@ defmodule Kastlex.Mixfile do
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     aliases: aliases,
      deps: deps]
   end
 
@@ -18,8 +17,7 @@ defmodule Kastlex.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Kastlex, []},
-     applications: [:phoenix, :cowboy, :logger, :gettext, :phoenix_ecto,
-                    :postgrex, :supervisor3, :kafka_protocol, :brod]]
+     applications: [:phoenix, :cowboy, :logger, :gettext, :brod]]
   end
 
   # Specifies which paths to compile per environment.
@@ -31,24 +29,13 @@ defmodule Kastlex.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [{:phoenix, "~> 1.1.4"},
-     {:postgrex, ">= 0.0.0"},
-     {:phoenix_ecto, "~> 2.0"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
      {:brod, "~> 2.1"},
      {:exrm, "~> 0.19.9"},
-     {:guardian, "~> 0.12.0"}]
+     {:guardian, "~> 0.12.0"},
+     {:erlzk, "~> 0.6.2"}]
   end
 
-  # Aliases are shortcut or tasks specific to the current project.
-  # For example, to create, migrate and run the seeds file at once:
-  #
-  #     $ mix ecto.setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
-  defp aliases do
-    ["ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-     "ecto.reset": ["ecto.drop", "ecto.setup"]]
-  end
 end

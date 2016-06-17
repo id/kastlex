@@ -16,25 +16,12 @@ defmodule Kastlex.Web do
   below.
   """
 
-  def model do
-    quote do
-      use Ecto.Schema
-
-      import Ecto
-      import Ecto.Changeset
-      import Ecto.Query, only: [from: 1, from: 2]
-    end
-  end
-
   def controller do
     quote do
       use Phoenix.Controller
 
-      alias Kastlex.Repo
-      import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]
-
       import Kastlex.Router.Helpers
+      import Kastlex.Helper
       import Kastlex.Gettext
     end
   end
@@ -62,9 +49,6 @@ defmodule Kastlex.Web do
     quote do
       use Phoenix.Channel
 
-      alias Kastlex.Repo
-      import Ecto
-      import Ecto.Query, only: [from: 1, from: 2]
       import Kastlex.Gettext
     end
   end

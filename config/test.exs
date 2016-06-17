@@ -9,15 +9,6 @@ config :kastlex, Kastlex.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-# Configure your database
-config :kastlex, Kastlex.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "kastlex_test",
-  hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
-
 config :brod, :clients,
   kastlex: [
     endpoints: ["localhost": 9092],

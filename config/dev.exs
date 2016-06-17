@@ -29,15 +29,6 @@ config :kastlex, Kastlex.Endpoint,
 # and calculating stacktraces is usually expensive.
 config :phoenix, :stacktrace_depth, 20
 
-# Configure your database
-config :kastlex, Kastlex.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "kastlex_dev",
-  hostname: "localhost",
-  pool_size: 10
-
 config :brod, :clients,
   kastlex: [
     endpoints: ["localhost": 9092],

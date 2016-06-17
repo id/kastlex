@@ -9,8 +9,6 @@ defmodule Kastlex do
     children = [
       # Start the endpoint when the application starts
       supervisor(Kastlex.Endpoint, []),
-      # Start the Ecto repository
-      supervisor(Kastlex.Repo, []),
       # Start the metadata cache worker
       worker(Kastlex.MetadataCache, []),
     ]

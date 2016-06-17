@@ -1,7 +1,6 @@
 defmodule Kastlex.API.V1.UrpController do
 
   require Logger
-  import Kastlex.Helper
 
   use Kastlex.Web, :controller
 
