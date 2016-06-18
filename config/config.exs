@@ -7,15 +7,14 @@ use Mix.Config
 
 # Configures the endpoint
 config :kastlex, Kastlex.Endpoint,
-  url: [host: "localhost"],
   root: Path.dirname(__DIR__),
   secret_key_base: "2N8sGXA6wijnGpzmiEl3y6H2YCf7RbeBbi7xgE58txpm6AxDWS+A4TYrUY0jYYGV",
-  render_errors: [accepts: ~w(json)],
-  pubsub: [name: Kastlex.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  render_errors: [accepts: ~w(json), default_format: "json"]
 
 config :kastlex, Kastlex.MetadataCache,
-  refresh_timeout_ms: 30000
+  refresh_timeout_ms: 5000,
+  zk_chroot: "/",
+  zk_session_timeout: 30000
 
 # Configures Elixir's Logger
 config :logger, :console,

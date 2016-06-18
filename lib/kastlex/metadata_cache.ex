@@ -23,18 +23,18 @@ defmodule Kastlex.MetadataCache do
     {:ok, ts, topics}
   end
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: @server])
+  def start_link(options) do
+    GenServer.start_link(__MODULE__, options, [name: @server])
   end
 
-  def init(:ok) do
+  def init(options) do
     :ets.new(@table, [:set, :protected, :named_table])
     :ets.insert(@table, {:ts, :erlang.system_time()})
     :ets.insert(@table, {:brokers, []})
     :ets.insert(@table, {:topics, []})
     env = Application.get_env(:kastlex, __MODULE__)
     refresh_timeout_ms = Keyword.fetch!(env, :refresh_timeout_ms)
-    zk_cluster = Keyword.fetch!(env, :zk_cluster)
+    zk_cluster = options.zk_cluster
     zk_session_timeout = Keyword.fetch!(env, :zk_session_timeout)
     zk_chroot = Keyword.fetch!(env, :zk_chroot)
     {:ok, zk} = :erlzk_conn.start_link(zk_cluster, zk_session_timeout, [chroot: zk_chroot])

@@ -6,11 +6,18 @@ defmodule Kastlex do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    kafka_endpoints = parse_endpoints(System.get_env("KASTLEX_KAFKA_CLUSTER"), [{'localhost', 9092}])
+    zk_cluster = parse_endpoints(System.get_env("KASTLEX_ZK_CLUSTER"), [{'localhost', 2181}])
+
+    brod_client_config = [{:allow_topic_auto_creation, false},
+                          {:auto_start_producers, true}]
+    :ok = :brod.start_client(kafka_endpoints, :kastlex, brod_client_config)
+
     children = [
       # Start the endpoint when the application starts
       supervisor(Kastlex.Endpoint, []),
       # Start the metadata cache worker
-      worker(Kastlex.MetadataCache, []),
+      worker(Kastlex.MetadataCache, [%{zk_cluster: zk_cluster}]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
@@ -24,5 +31,13 @@ defmodule Kastlex do
   def config_change(changed, _new, removed) do
     Kastlex.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp parse_endpoints(nil, default), do: default
+  defp parse_endpoints(endpoints, _default) do
+    endpoints
+      |> String.split(",")
+      |> Enum.map(&String.split(&1, ":"))
+      |> Enum.map(fn([host, port]) -> {host, :erlang.binary_to_integer(port)} end)
   end
 end
