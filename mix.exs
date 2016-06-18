@@ -17,7 +17,7 @@ defmodule Kastlex.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {Kastlex, []},
-     applications: [:phoenix, :cowboy, :logger, :gettext, :erlzk, :brod]]
+     applications: [:phoenix, :cowboy, :logger, :gettext, :erlzk, :brod, :guardian]]
   end
 
   # Specifies which paths to compile per environment.
@@ -33,7 +33,7 @@ defmodule Kastlex.Mixfile do
      {:gettext, "~> 0.9"},
      {:cowboy, "~> 1.0"},
      {:brod, "~> 2.1"},
-     {:exrm, "~> 0.19.9"},
+     {:exrm, "~> 1.0"},
      {:guardian, "~> 0.12.0"},
      {:erlzk, "~> 0.6.2"}]
   end
