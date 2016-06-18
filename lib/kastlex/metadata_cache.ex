@@ -7,7 +7,9 @@ defmodule Kastlex.MetadataCache do
   @server __MODULE__
   @refresh :refresh
 
+  @brokers_path "/brokers/ids"
   @topics_path "/brokers/topics"
+  @topics_config_path "/config/topics"
 
   def get_brokers() do
     [{:ts, ts}] = :ets.lookup(@table, :ts)
@@ -31,38 +33,33 @@ defmodule Kastlex.MetadataCache do
     :ets.insert(@table, {:brokers, []})
     :ets.insert(@table, {:topics, []})
     env = Application.get_env(:kastlex, __MODULE__)
+    refresh_timeout_ms = Keyword.fetch!(env, :refresh_timeout_ms)
+    zk_cluster = Keyword.fetch!(env, :zk_cluster)
+    zk_session_timeout = Keyword.fetch!(env, :zk_session_timeout)
+    zk_chroot = Keyword.fetch!(env, :zk_chroot)
+    {:ok, zk} = :erlzk_conn.start_link(zk_cluster, zk_session_timeout, [chroot: zk_chroot])
     :erlang.send_after(0, Kernel.self(), @refresh)
-    {:ok, %{refresh_timeout_ms: Keyword.fetch!(env, :refresh_timeout_ms),
-            zk: nil,
-            zk_mref: nil,
-            zk_cluster: Keyword.fetch!(env, :zk_cluster),
-            zk_session_timeout: Keyword.fetch!(env, :zk_session_timeout),
-            zk_chroot: Keyword.fetch!(env, :zk_chroot)}}
+    {:ok, %{refresh_timeout_ms: refresh_timeout_ms,
+            zk: zk,
+            zk_cluster: zk_cluster,
+            zk_session_timeout: zk_session_timeout,
+            zk_chroot: zk_chroot}}
   end
 
   def handle_info(@refresh, state) do
-    case connect_zk(state) do
-      {:ok, state} ->
-        case :erlzk.get_children(state.zk, @topics_path) do
-          {:ok, topics} ->
-            topics = Enum.map(topics, &read_topic_meta(state.zk, &1))
-            :ets.insert(@table, {:ts, :erlang.system_time()})
-            :ets.insert(@table, {:topics, topics})
-            :erlang.send_after(state.refresh_timeout_ms, Kernel.self(), @refresh)
-            {:noreply, state}
-          {:error, reason} ->
-            Logger.error "Skip refresh, zookeeper connection is down: #{reason}"
-            {:noreply, state}
-        end
-      {:error, reason} ->
-        Logger.error "Skip refresh, can't connect to zookeeper: #{reason}"
-        {:noreply, state}
+    try do
+      {:ok, topic_names} = :erlzk.get_children(state.zk, @topics_path)
+      {:ok, topics} = get_topics_meta(state.zk, topic_names, [])
+      {:ok, broker_ids} = :erlzk.get_children(state.zk, @brokers_path)
+      {:ok, brokers} = get_brokers_meta(state.zk, broker_ids, [])
+      :ets.insert(@table, {:ts, :erlang.system_time()})
+      :ets.insert(@table, {:topics, topics})
+      :ets.insert(@table, {:brokers, brokers})
+    rescue
+      e -> Logger.error " Skipping refresh: #{Exception.message(e)}"
     end
-  end
-
-  def handle_info({:DOWN, zk_mref, :process, zk, _why},
-        %{:zk_mref => zk_mref, :zk => zk} = state) do
-    {:noreply, %{state | zk: nil, zk_mref: nil}}
+    :erlang.send_after(state.refresh_timeout_ms, Kernel.self(), @refresh)
+    {:noreply, state}
   end
 
   def handle_info(msg, state) do
@@ -70,31 +67,45 @@ defmodule Kastlex.MetadataCache do
     {:noreply, state}
   end
 
-  defp connect_zk(%{:zk => zk} = state) when Kernel.is_pid(zk), do: {:ok, state}
-  defp connect_zk(state) do
-    case :erlzk.connect(state.zk_cluster, state.zk_session_timeout, [chroot: state.zk_chroot]) do
-      {:ok, zk} ->
-        zk_mref = :erlang.monitor(:process, zk)
-        {:ok, %{state | zk: zk, zk_mref: zk_mref}}
-      {:error, reason} ->
-        {:error, reason}
-    end
+  defp get_topics_meta(_zk, [], topics), do: {:ok, topics}
+  defp get_topics_meta(zk, [t_name | tail], acc) do
+    {:ok, topic} = get_topic_meta(zk, t_name)
+    get_topics_meta(zk, tail, [topic | acc])
   end
 
-  defp read_topic_meta(zk, topic) do
-    topic = :erlang.list_to_binary(topic)
-    path = Enum.join([@topics_path, topic], "/")
-    {:ok, {json, _stat}} = :erlzk.get_data(zk, path)
-    %{"partitions" => partitions} = Poison.decode!(json)
-    partitions = Enum.map(partitions, &read_partition_meta(zk, topic, &1))
-    %{topic: topic, partitions: partitions}
+  defp get_topic_meta(zk, t_name) do
+    topic = :erlang.list_to_binary(t_name)
+    data_path = Enum.join([@topics_path, topic], "/")
+    config_path = Enum.join([@topics_config_path, topic], "/")
+    {:ok, {data_json, _}} = :erlzk.get_data(zk, data_path)
+    {:ok, {config_json, _}} = :erlzk.get_data(zk, config_path)
+    %{"partitions" => assignments} = Poison.decode!(data_json)
+    {:ok, partitions} = get_partitions_meta(zk, topic, Map.to_list(assignments), [])
+    %{"config" => config} = Poison.decode!(config_json)
+    {:ok, %{topic: topic, config: config, partitions: partitions}}
   end
 
-  defp read_partition_meta(zk, topic, {partition, replicas}) do
+  defp get_partitions_meta(_zk, _topic, [], acc), do: {:ok, acc}
+  defp get_partitions_meta(zk, topic, [a | tail], acc) do
+    {:ok, partition} = get_partition_meta(zk, topic, a)
+    get_partitions_meta(zk, topic, tail, [partition | acc])
+  end
+
+  defp get_partition_meta(zk, topic, {partition, replicas}) do
     path = Enum.join([@topics_path, topic, "partitions", partition, "state"], "/")
     {:ok, {json, _stat}} = :erlzk.get_data(zk, path)
     %{"isr" => isr, "leader" => leader} = Poison.decode!(json)
-    %{partition: partition, replicas: replicas, isr: isr, leader: leader}
+    {:ok, %{partition: partition, replicas: replicas, isr: isr, leader: leader}}
+  end
+
+  defp get_brokers_meta(_zk, [], brokers), do: {:ok, brokers}
+  defp get_brokers_meta(zk, [id | tail], acc) do
+    path = Enum.join([@brokers_path, id], "/")
+    {:ok, {json, _stat}} = :erlzk.get_data(zk, path)
+    %{"endpoints" => endpoints, "host" => host, "port" => port} = Poison.decode!(json)
+    id = :erlang.list_to_integer(id)
+    broker = %{id: id, endpoints: endpoints, host: host, port: port}
+    get_brokers_meta(zk, tail, [broker | acc])
   end
 
 end
