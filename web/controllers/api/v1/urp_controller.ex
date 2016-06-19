@@ -17,21 +17,14 @@ defmodule Kastlex.API.V1.UrpController do
   plug Kastlex.Plug.Authorize when action in [:show]
 
   def index(conn, _params) do
-    {:ok, _, topics} = Kastlex.MetadataCache.get_topics()
+    {:ok, topics} = Kastlex.MetadataCache.get_topics()
     urp = List.foldl(topics, [],
                      fn (t, acc) ->
-                       partitions = List.foldl(t.partitions,
-                                               [],
-                                               fn(p, acc) ->
-                                                 case p.error_code == :ReplicaNotAvailable do
-                                                   true -> [p | acc]
-                                                   false -> acc
-                                                 end
-                                               end)
-                       case partitions do
+                       urp = get_urp(t.partitions)
+                       case urp do
                          []    -> acc
                          [_|_] ->
-                           [%{t | :partitions => partitions} | acc]
+                           [%{topic: t.topic, urp: urp} | acc]
                        end
                      end)
     case urp do
@@ -41,12 +34,26 @@ defmodule Kastlex.API.V1.UrpController do
   end
 
   def show(conn, %{"topic" => name}) do
-    {:ok, _, topics} = Kastlex.MetadataCache.get_topics()
+    {:ok, topics} = Kastlex.MetadataCache.get_topics()
     case Enum.find(topics, nil, fn(x) -> x.topic == name end) do
       nil ->
         send_json(conn, 404, %{error: "unknown topic"})
       topic ->
-        json(conn, topic)
+        urp = get_urp(topic.partitions)
+        case urp do
+          []    -> send_resp(conn, 204, "")
+          [_|_] -> json(conn, %{topic: topic.topic, urp: urp})
+        end
+    end
+  end
+
+  defp get_urp(partitions), do: get_urp(partitions, [])
+
+  defp get_urp([], acc), do: acc
+  defp get_urp([p | tail], acc) do
+    case p.replicas != p.isr do
+      true -> [p | acc]
+      false -> acc
     end
   end
 

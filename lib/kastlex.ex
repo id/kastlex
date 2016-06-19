@@ -7,7 +7,7 @@ defmodule Kastlex do
     import Supervisor.Spec, warn: false
 
     kafka_endpoints = parse_endpoints(System.get_env("KASTLEX_KAFKA_CLUSTER"), [{'localhost', 9092}])
-    zk_cluster = parse_endpoints(System.get_env("KASTLEX_ZK_CLUSTER"), [{'localhost', 2181}])
+    zk_cluster = parse_endpoints(System.get_env("KASTLEX_ZOOKEEPER_CLUSTER"), [{'localhost', 2181}])
 
     brod_client_config = [{:allow_topic_auto_creation, false},
                           {:auto_start_producers, true}]
@@ -38,6 +38,6 @@ defmodule Kastlex do
     endpoints
       |> String.split(",")
       |> Enum.map(&String.split(&1, ":"))
-      |> Enum.map(fn([host, port]) -> {host, :erlang.binary_to_integer(port)} end)
+      |> Enum.map(fn([host, port]) -> {:erlang.binary_to_list(host), :erlang.binary_to_integer(port)} end)
   end
 end

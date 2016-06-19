@@ -17,13 +17,13 @@ defmodule Kastlex.API.V1.TopicController do
   plug Kastlex.Plug.Authorize when action in [:show]
 
   def index(conn, _params) do
-    {:ok, _, topics} = Kastlex.MetadataCache.get_topics()
+    {:ok, topics} = Kastlex.MetadataCache.get_topics()
     topics = Enum.map(topics, fn(x) -> x.topic end)
     json(conn, topics)
   end
 
   def show(conn, %{"topic" => name}) do
-    {:ok, _, topics} = Kastlex.MetadataCache.get_topics()
+    {:ok, topics} = Kastlex.MetadataCache.get_topics()
     case Enum.find(topics, nil, fn(x) -> x.topic == name end) do
       nil ->
         send_json(conn, 404, %{error: "unknown topic"})

@@ -11,16 +11,19 @@ defmodule Kastlex.MetadataCache do
   @topics_path "/brokers/topics"
   @topics_config_path "/config/topics"
 
-  def get_brokers() do
+  def get_ts() do
     [{:ts, ts}] = :ets.lookup(@table, :ts)
+    {:ok, ts}
+  end
+
+  def get_brokers() do
     [{:brokers, brokers}] = :ets.lookup(@table, :brokers)
-    {:ok, ts, brokers}
+    {:ok, brokers}
   end
 
   def get_topics() do
-    [{:ts, ts}] = :ets.lookup(@table, :ts)
     [{:topics, topics}] = :ets.lookup(@table, :topics)
-    {:ok, ts, topics}
+    {:ok, topics}
   end
 
   def start_link(options) do
@@ -82,7 +85,7 @@ defmodule Kastlex.MetadataCache do
     %{"partitions" => assignments} = Poison.decode!(data_json)
     {:ok, partitions} = get_partitions_meta(zk, topic, Map.to_list(assignments), [])
     %{"config" => config} = Poison.decode!(config_json)
-    {:ok, %{topic: topic, config: config, partitions: partitions}}
+    {:ok, %{topic: topic, config: config, partitions: Enum.sort(partitions, &(&1.partition < &2.partition))}}
   end
 
   defp get_partitions_meta(_zk, _topic, [], acc), do: {:ok, acc}
@@ -95,7 +98,7 @@ defmodule Kastlex.MetadataCache do
     path = Enum.join([@topics_path, topic, "partitions", partition, "state"], "/")
     {:ok, {json, _stat}} = :erlzk.get_data(zk, path)
     %{"isr" => isr, "leader" => leader} = Poison.decode!(json)
-    {:ok, %{partition: partition, replicas: replicas, isr: isr, leader: leader}}
+    {:ok, %{partition: partition, replicas: Enum.sort(replicas), isr: Enum.sort(isr), leader: leader}}
   end
 
   defp get_brokers_meta(_zk, [], brokers), do: {:ok, brokers}
