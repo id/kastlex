@@ -1,9 +1,6 @@
 defmodule Kastlex.MessageControllerTest do
   use Kastlex.ConnCase
 
-  @valid_attrs %{}
-  @invalid_attrs %{}
-
   setup do
     {:ok, %{}}
   end

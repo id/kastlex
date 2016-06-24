@@ -9,8 +9,3 @@ config :kastlex, Kastlex.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
-config :brod, :clients,
-  kastlex: [
-    endpoints: ["localhost": 9092],
-    auto_start_producers: true
-  ]

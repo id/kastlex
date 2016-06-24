@@ -1,6 +1,6 @@
 %{"base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], []},
   "bbmustache": {:hex, :bbmustache, "1.0.4", "7ba94f971c5afd7b6617918a4bb74705e36cab36eb84b19b6a1b7ee06427aa38", [:rebar], []},
-  "brod": {:hex, :brod, "2.1.4", "a874ed885b1dafdceda4d5b58ea69d71f5894eb19bfa6fef7ba9cf37c054f0a2", [:make, :rebar3], [{:supervisor3, "1.1.1", [hex: :supervisor3, optional: false]}, {:kafka_protocol, "0.3.2", [hex: :kafka_protocol, optional: false]}]},
+  "brod": {:hex, :brod, "2.1.7", "35d1b098bc5c54064a41b043ba2b2388b24a68f56daa7ad5ce3fef19ac0dfe16", [:make, :rebar3], [{:supervisor3, "1.1.1", [hex: :supervisor3, optional: false]}, {:kafka_protocol, "0.3.2", [hex: :kafka_protocol, optional: false]}]},
   "cf": {:hex, :cf, "0.2.1", "69d0b1349fd4d7d4dc55b7f407d29d7a840bf9a1ef5af529f1ebe0ce153fc2ab", [:rebar3], []},
   "conform": {:hex, :conform, "0.17.0", "e3610a337b7c44beb829f176cbb0795f78fe53a0183a524a04e0ebe0f76f9113", [:mix], [{:neotoma, "~> 1.7.3", [hex: :neotoma, optional: false]}]},
   "cowboy": {:hex, :cowboy, "1.0.4", "a324a8df9f2316c833a470d918aaf73ae894278b8aa6226ce7a9bf699388f878", [:rebar, :make], [{:cowlib, "~> 1.0.0", [hex: :cowlib, optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, optional: false]}]},

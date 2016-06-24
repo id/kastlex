@@ -20,11 +20,6 @@ defmodule Kastlex.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
 
-      alias Kastlex.Repo
-      import Ecto
-      import Ecto.Changeset
-      import Ecto.Query, only: [from: 1, from: 2]
-
       import Kastlex.Router.Helpers
 
       # The default endpoint for testing
@@ -32,11 +27,4 @@ defmodule Kastlex.ConnCase do
     end
   end
 
-  setup tags do
-    unless tags[:async] do
-      Ecto.Adapters.SQL.restart_test_transaction(Kastlex.Repo, [])
-    end
-
-    {:ok, conn: Phoenix.ConnTest.conn()}
-  end
 end
