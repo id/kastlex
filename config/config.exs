@@ -19,7 +19,9 @@ config :kastlex, Kastlex.MetadataCache,
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time [$level] $metadata $message\n",
-  metadata: [:request_id]
+  metadata: [:request_id, :remote_ip],
+  handle_otp_reports: true,
+  handle_sasl_reports: true
 
 # Configure phoenix generators
 config :phoenix, :generators,

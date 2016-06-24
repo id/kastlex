@@ -20,6 +20,7 @@ defmodule Kastlex.Endpoint do
   end
 
   plug Plug.RequestId
+  plug Kastlex.Plug.RequestMeta
   plug Plug.Logger
 
   plug Plug.Parsers,

@@ -1,12 +1,12 @@
 defmodule Kastlex.ErrorView do
   use Kastlex.Web, :view
 
-  def render("404.json", _assigns) do
+  def render("404.json", _assings) do
     %{error: "Not found"}
   end
 
   def render("404.html", _assigns) do
-    {:ok, msg} = Poison.encode(%{error: "wrong path"})
+    {:ok, msg} = Poison.encode(%{error: "No route"})
     {:safe, msg}
   end
 
