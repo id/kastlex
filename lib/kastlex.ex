@@ -26,6 +26,7 @@ defmodule Kastlex do
       supervisor(Kastlex.Endpoint, []),
       # Start the metadata cache worker
       worker(Kastlex.MetadataCache, [%{zk_cluster: zk_cluster}]),
+      worker(Kastlex.CgStatusCollector, [%{brod_client_id: :kastlex}]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
