@@ -29,15 +29,15 @@ config :phoenix, :generators,
   binary_id: false
 
 config :guardian, Guardian,
-  allowed_algos: ["HS512"], # optional
-  verify_module: Guardian.JWT,  # optional
+  allowed_algos: ["HS512"],
+  verify_module: Guardian.JWT,
   issuer: "Kastlex",
   ttl: { 30, :days },
-  verify_issuer: true, # optional
-  secret_key: "yCWR+HlWNjnBzh1UsGducT9Irq8zmAWxMbPUV+e3S70cPXeJRMz62y5xDtB3qCRL",
+  verify_issuer: true,
+  # secret_key is expected to be found in $KASTLEX_SECRET_KEY_FILE
   serializer: Kastlex.GuardianSerializer,
   permissions: %{client: [:show_topic, :show_urp, :offsets, :fetch, :produce],
-                 admin: [:list_topics, :list_brokers, :issue_token, :list_urps]}
+                 admin: [:list_topics, :list_brokers, :issue_token, :list_urp]}
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
