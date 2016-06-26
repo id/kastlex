@@ -36,8 +36,8 @@ config :guardian, Guardian,
   verify_issuer: true,
   # secret_key is expected to be found in $KASTLEX_SECRET_KEY_FILE
   serializer: Kastlex.GuardianSerializer,
-  permissions: %{client: [:show_topic, :show_urp, :offsets, :fetch, :produce],
-                 admin: [:list_topics, :list_brokers, :issue_token, :list_urp]}
+  permissions: %{client: [:show_topic, :show_urp, :offsets, :fetch, :produce, :show_consumer],
+                 admin: [:list_topics, :list_brokers, :issue_token, :list_urp, :list_consumers]}
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

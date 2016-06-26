@@ -12,12 +12,20 @@ defmodule Kastlex.CgStatusCollector do
   @topic "__consumer_offsets"
   @server __MODULE__
 
-  def get_groups() do
-    :ets.tab2list(@table_groups)
+  def get_group_ids() do
+    :ets.select(@table_groups, [{{:"$1", :_}, [], [:"$1"]}])
+  end
+
+  def get_group(group_id) do
+    case :ets.lookup(@table_groups, group_id) do
+      [] -> false
+      [{_, group}] -> {:ok, group}
+    end
   end
 
   def get_offsets() do
-    :ets.tab2list(@table_offsets)
+    # get just values
+    :ets.select(@table_offsets, [{{:_, :"$1"}, [], [:"$1"]}])
   end
 
   def start_link(options) do
