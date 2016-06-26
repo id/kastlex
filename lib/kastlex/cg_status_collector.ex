@@ -7,20 +7,17 @@ defmodule Kastlex.CgStatusCollector do
 
   @behaviour :brod_topic_subscriber
 
-  @table :consumer_offsets
+  @table_groups  :consumer_groups
+  @table_offsets :consumer_offsets
   @topic "__consumer_offsets"
   @server __MODULE__
 
   def get_groups() do
-    Enum.filter(
-      :ets.tab2list(@table),
-      fn({key, _value}) -> get_type(key) === :group end)
+    :ets.tab2list(@table_groups)
   end
 
   def get_offsets() do
-    Enum.filter(
-      :ets.tab2list(@table),
-      fn({key, _value}) -> get_type(key) === :offset end)
+    :ets.tab2list(@table_offsets)
   end
 
   def start_link(options) do
@@ -29,41 +26,28 @@ defmodule Kastlex.CgStatusCollector do
     ## start a topic subscriber which will spawn one consumer process
     ## for each partition, and subscribe to all partition consumers
     :brod_topic_subscriber.start_link(client, @topic, _partitions = :all,
-                                      consumer_config, __MODULE__, @table)
+                                      consumer_config, __MODULE__, nil)
   end
 
-  def init(@topic, @table) do
-    :ets.new(@table, [:set, :protected, :named_table])
+  def init(@topic, _) do
+    :ets.new(@table_groups, [:set, :protected, :named_table])
+    :ets.new(@table_offsets, [:set, :protected, :named_table])
     {:ok, [], %{}}
   end
 
   def handle_message(_partition, msg, state) do
     key_bin = kafka_message(msg, :key)
     value_bin = kafka_message(msg, :value)
-    {tag, key, value} = :kpro_consumer_group.decode(key_bin, value_bin)
-    kf = fn(k) ->
-      {:ok, v} = Keyword.fetch(key, k)
-      v
-    end
+    {tag, key, value} = :kpro_consumer_group.decode(true, key_bin, value_bin)
     case tag do
-      :offset -> update_ets({kf.(:group_id), kf.(:topic), kf.(:partition)}, value)
-      :group  -> update_ets(kf.(:group_id), value)
+      :offset -> update_ets(@table_offsets, {key[:group_id], key[:topic], key[:partition]},
+                            :maps.merge(key, value))
+      :group  -> update_ets(@table_groups, key[:group_id], :maps.merge(key, value))
     end
     {:ok, :ack, state}
   end
 
-  defp get_type(group_id) when is_binary(group_id) do
-    :group
-  end
-  defp get_type({group_id, _topic, _partition}) when is_binary(group_id) do
-    :offset
-  end
-
-  defp update_ets(key, _value = []) do
-    :ets.delete(@table, key)
-  end
-  defp update_ets(key, value) do
-    :ets.insert(@table, {key, value})
-  end
+  #defp update_ets(table, key, _value = %{}), do: :ets.delete(table, key)
+  defp update_ets(table, key, value),        do: :ets.insert(table, {key, value})
 end
 
