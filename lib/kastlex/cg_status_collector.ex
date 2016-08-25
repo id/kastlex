@@ -13,14 +13,22 @@ defmodule Kastlex.CgStatusCollector do
   @server __MODULE__
 
   def get_group_ids() do
-    :ets.select(@table_groups, [{{:"$1", :_}, [], [:"$1"]}])
+    ms = [{{:"$1", :_}, [], [:"$1"]}]
+    :ets.select(@table_groups, ms)
   end
 
   def get_group(group_id) do
-    case :ets.lookup(@table_groups, group_id) do
-      [] -> false
-      [{_, group}] -> {:ok, group}
-    end
+    ets_lookup(@table_groups, group_id, false)
+  end
+
+  def get_group_topics(group) do
+    ms = [{{{group, :"$1", :_}, :_}, [], [:"$1"]}]
+    :ets.select(@table_offsets, ms)
+  end
+
+  def get_group_topic(group, topic) do
+    ms = [{{{group, topic, :_}, :"$1"}, [], [:"$1"]}]
+    :ets.select(@table_offsets, ms)
   end
 
   def get_offsets() do
@@ -46,16 +54,36 @@ defmodule Kastlex.CgStatusCollector do
   def handle_message(_partition, msg, state) do
     key_bin = kafka_message(msg, :key)
     value_bin = kafka_message(msg, :value)
-    {tag, key, value} = :kpro_consumer_group.decode(true, key_bin, value_bin)
+    {tag, data} = :kpro_consumer_group.to_maps(:kpro_consumer_group.decode(key_bin, value_bin))
     case tag do
-      :offset -> update_ets(@table_offsets, {key[:group_id], key[:topic], key[:partition]},
-                            :maps.merge(key, value))
-      :group  -> update_ets(@table_groups, key[:group_id], :maps.merge(key, value))
+      :offset ->
+        data =
+          maybe_fix_epoch(data, :commit_time) |>
+          maybe_fix_epoch(:expire_time)
+        :ets.insert(@table_offsets, {{data.group_id, data.topic, data.partition}, data})
+      :group ->
+        :ets.insert(@table_groups, {data.group_id, data})
     end
     {:ok, :ack, state}
   end
 
-  #defp update_ets(table, key, _value = %{}), do: :ets.delete(table, key)
-  defp update_ets(table, key, value),        do: :ets.insert(table, {key, value})
+  defp ets_lookup(table, key, default) do
+    case :ets.lookup(table, key) do
+      [] -> {:ok, default}
+      [{_, value}] -> {:ok, value}
+    end
+  end
+
+  defp maybe_fix_epoch(map, key) do
+    case Map.has_key?(map, key) do
+      true -> Map.update!(map, key, &epoch_to_str/1)
+      false -> map
+    end
+  end
+
+  defp epoch_to_str(epoch) do
+    {:ok, dt} = DateTime.from_unix(epoch, :milliseconds)
+    DateTime.to_string(dt)
+  end
 end
 

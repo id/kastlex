@@ -31,7 +31,9 @@ defmodule Kastlex.Router do
     post "/tokens", TokenController, :create
     get  "/urp", UrpController, :index
     get  "/urp/:topic", UrpController, :show
-    get  "/consumers", ConsumerController, :index
-    get  "/consumers/:group_id", ConsumerController, :show
+    get  "/consumers", ConsumerController, :list_groups
+    get  "/consumers/:group_id", ConsumerController, :show_group
+    get  "/consumers/:group_id/topics", ConsumerController, :list_group_topics
+    get  "/consumers/:group_id/topics/:topic", ConsumerController, :show_group_topic
   end
 end

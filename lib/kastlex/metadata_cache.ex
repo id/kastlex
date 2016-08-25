@@ -40,7 +40,7 @@ defmodule Kastlex.MetadataCache do
     zk_cluster = options.zk_cluster
     zk_session_timeout = Keyword.fetch!(env, :zk_session_timeout)
     zk_chroot = Keyword.fetch!(env, :zk_chroot)
-    {:ok, zk} = :erlzk_conn.start_link(zk_cluster, zk_session_timeout, [chroot: zk_chroot])
+    {:ok, zk} = :erlzk.connect(zk_cluster, zk_session_timeout, [chroot: zk_chroot])
     :erlang.send_after(0, Kernel.self(), @refresh)
     {:ok, %{refresh_timeout_ms: refresh_timeout_ms,
             zk: zk,
@@ -68,6 +68,10 @@ defmodule Kastlex.MetadataCache do
   def handle_info(msg, state) do
     Logger.error "Unexpected msg: #{msg}"
     {:noreply, state}
+  end
+
+  def terminate(reason, _state) do
+    Logger.info "#{inspect Kernel.self} is terminating: #{inspect reason}"
   end
 
   defp get_topics_meta(_zk, [], topics), do: {:ok, topics}
