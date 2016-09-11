@@ -29,8 +29,6 @@ defmodule Kastlex do
       worker(Kastlex.CgStatusCollector, [%{brod_client_id: :kastlex}]),
     ]
 
-    # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Kastlex.Supervisor]
     Supervisor.start_link(children, opts)
   end

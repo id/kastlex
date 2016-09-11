@@ -54,7 +54,7 @@ defmodule Kastlex.CgStatusCollector do
   def handle_message(_partition, msg, state) do
     key_bin = kafka_message(msg, :key)
     value_bin = kafka_message(msg, :value)
-    {tag, data} = :kpro_consumer_group.to_maps(:kpro_consumer_group.decode(key_bin, value_bin))
+    {tag, data} = to_maps(:kpro_consumer_group.decode(key_bin, value_bin))
     case tag do
       :offset ->
         data =
@@ -85,5 +85,16 @@ defmodule Kastlex.CgStatusCollector do
     {:ok, dt} = DateTime.from_unix(epoch, :milliseconds)
     DateTime.to_string(dt)
   end
+
+  def to_maps({tag, key, value}) do
+    data = Keyword.delete(key ++ value, :version)
+    {tag, Map.new(data, &do_to_maps/1)}
+  end
+
+  def do_to_maps({k, [x | _] = v}) when is_list(x), do: {k, :lists.map(&do_to_maps/1, v)}
+  def do_to_maps({k, [x | _] = v}) when is_tuple(x), do: {k, Map.new(v, &do_to_maps/1)}
+  def do_to_maps([{_, _} | _] = x), do: Map.new(:lists.map(&do_to_maps/1, x))
+  def do_to_maps({k, v}), do: {k, v}
+
 end
 

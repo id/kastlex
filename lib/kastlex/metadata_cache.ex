@@ -59,7 +59,7 @@ defmodule Kastlex.MetadataCache do
       :ets.insert(@table, {:topics, topics})
       :ets.insert(@table, {:brokers, brokers})
     rescue
-      e -> Logger.error " Skipping refresh: #{Exception.message(e)}"
+      e -> Logger.error "Skipping refresh: #{Exception.message(e)}"
     end
     :erlang.send_after(state.refresh_timeout_ms, Kernel.self(), @refresh)
     {:noreply, state}

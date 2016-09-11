@@ -12,9 +12,6 @@ defmodule Kastlex.Mixfile do
      deps: deps]
   end
 
-  # Configuration for the OTP application.
-  #
-  # Type `mix help compile.app` for more information.
   def application do
     [mod: {Kastlex, []},
      applications: [:logger, :phoenix, :cowboy, :gettext,
@@ -29,11 +26,11 @@ defmodule Kastlex.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.1.4"},
+    [{:phoenix, "~> 1.2"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:gettext, "~> 0.9"},
+     {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
-     {:brod, "~> 2.1"},
+     {:brod, github: "klarna/brod", branch: "2.2-dev"},
      {:exrm, "~> 1.0"},
      {:guardian, "~> 0.12.0"},
      {:erlzk, "~> 0.6.3"}
