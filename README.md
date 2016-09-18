@@ -21,15 +21,72 @@ Default port is 8092.
 ## Topics metadata
 
     GET   /api/v1/topics
+    ["kastlex"]
+
     GET   /api/v1/topics/:topic
+    {"topic":"kastlex","partitions":[{"replicas":[0],"partition":0,"leader":0,"isr":[0]}],"config":{}}
 
 ## Brokers metadata
 
     GET   /api/v1/brokers
+    [{"port":9092,"id":0,"host":"localhost","endpoints":["PLAINTEXT://127.0.0.1:9092"]}]
+
+    GET   /api/v1/brokers/:broker_id
+    {"port":9092,"id":0,"host":"localhost","endpoints":["PLAINTEXT://127.0.0.1:9092"]}
+
+## Consumer groups
+
+    GET   /api/v1/consumers
+    ["console-consumer-25992"]
+
+    GET   /api/v1/consumers/:group_id
+    {
+        "protocol": "range",
+        "partitions": [
+            {
+                "topic": "kastlex",
+                "partition": 0,
+                "offset": 20,
+                "metadata": "",
+                "high_wm_offset": 20,
+                "expire_time": 1473714215481,
+                "commit_time": 1473627815481
+            }
+        ],
+        "members": [
+            {
+                "subscription": {
+                    "version": 0,
+                    "user_data": "",
+                    "topics": [
+                        "kastlex"
+                    ]
+                },
+                "session_timeout": 30000,
+                "member_id": "consumer-1-ea5aa1bc-6b14-488f-88f1-26edb2261786",
+                "client_id": "consumer-1",
+                "client_host": "/127.0.0.1",
+                "assignment": {
+                    "version": 0,
+                    "user_data": "",
+                    "topic_partitions": {
+                        "kastlex": [
+                            0
+                        ]
+                    }
+                }
+            }
+        ],
+        "leader": "consumer-1-ea5aa1bc-6b14-488f-88f1-26edb2261786",
+        "group_id": "console-consumer-66960",
+        "generation_id": 1
+    }
+
 
 ## Query available offsets for partition.
 
     GET   /api/v1/offsets/:topic/:partition
+    [20]
 
 Optional parameters:
   * `at`: point of interest, `latest`, `earliest`, or a number, default `latest`
@@ -38,6 +95,20 @@ Optional parameters:
 ## Fetch messages
 
     GET   /api/v1/messages/:topic/:partition/:offset
+    {
+      "size": 29,
+      "messages": [
+        {
+          "value": "foo",
+          "size": 17,
+          "offset": 20,
+          "key": null,
+          "crc": -91546804
+        }
+      ],
+      "highWmOffset": 21,
+      "errorCode": "no_error"
+    }
 
 Optional parameters:
   * `max_wait_time`: maximum time in ms to wait for the response, default 1000
@@ -51,6 +122,7 @@ Optional parameters:
 Use `Content-type: application/binary`.  
 Key is supplied as query parameter `key`.  
 Value is request body.  
+Successful response: HTTP Status 204 and empty body.  
 
 ## List under-replicated partitions
 
