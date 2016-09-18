@@ -3,6 +3,8 @@ defmodule Kastlex.MetadataCache do
 
   use GenServer
 
+  # TODO: use zk watchers to reduce IO
+
   @table __MODULE__
   @server __MODULE__
   @refresh :refresh
@@ -89,7 +91,8 @@ defmodule Kastlex.MetadataCache do
     %{"partitions" => assignments} = Poison.decode!(data_json)
     {:ok, partitions} = get_partitions_meta(zk, topic, Map.to_list(assignments), [])
     %{"config" => config} = Poison.decode!(config_json)
-    {:ok, %{topic: topic, config: config, partitions: Enum.sort(partitions, &(&1.partition < &2.partition))}}
+    {:ok, %{topic: topic, config: config,
+            partitions: Enum.sort(partitions, &(&1.partition < &2.partition))}}
   end
 
   defp get_partitions_meta(_zk, _topic, [], acc), do: {:ok, acc}
@@ -102,7 +105,10 @@ defmodule Kastlex.MetadataCache do
     path = Enum.join([@topics_path, topic, "partitions", partition, "state"], "/")
     {:ok, {json, _stat}} = :erlzk.get_data(zk, path)
     %{"isr" => isr, "leader" => leader} = Poison.decode!(json)
-    {:ok, %{partition: partition, replicas: Enum.sort(replicas), isr: Enum.sort(isr), leader: leader}}
+    {:ok, %{partition: :erlang.binary_to_integer(partition),
+            leader: leader,
+            replicas: Enum.sort(replicas),
+            isr: Enum.sort(isr)}}
   end
 
   defp get_brokers_meta(_zk, [], brokers), do: {:ok, brokers}

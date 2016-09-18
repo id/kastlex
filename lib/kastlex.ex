@@ -26,6 +26,8 @@ defmodule Kastlex do
       supervisor(Kastlex.Endpoint, []),
       # Start the metadata cache worker
       worker(Kastlex.MetadataCache, [%{zk_cluster: zk_cluster}]),
+      worker(Kastlex.CgCache, []),
+      worker(Kastlex.OffsetsCache, [%{brod_client_id: :kastlex}]),
       worker(Kastlex.CgStatusCollector, [%{brod_client_id: :kastlex}]),
     ]
 

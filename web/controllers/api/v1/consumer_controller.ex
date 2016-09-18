@@ -12,28 +12,18 @@ defmodule Kastlex.API.V1.ConsumerController do
 
   plug Guardian.Plug.EnsurePermissions,
     %{handler: Kastlex.AuthErrorHandler, client: [:show_consumer]}
-    when action in [:show_group, :list_group_topics, :show_group_topic]
+    when action in [:show_group]
 
   def list_groups(conn, _params) do
-    groups = Kastlex.CgStatusCollector.get_group_ids()
+    groups = Kastlex.CgCache.get_groups()
     json(conn, groups)
   end
 
   def show_group(conn, %{"group_id" => group_id}) do
-    case Kastlex.CgStatusCollector.get_group(group_id) do
-      {:ok, group} -> json(conn, group)
+    case Kastlex.CgCache.get_group(group_id) do
       false -> send_json(conn, 404, %{error: "unknown group"})
+      group -> json(conn, group)
     end
-  end
-
-  def list_group_topics(conn, %{"group_id" => group_id}) do
-    topics = Kastlex.CgStatusCollector.get_group_topics(group_id)
-    json(conn, topics)
-  end
-
-  def show_group_topic(conn, %{"group_id" => group_id, "topic" => topic_name}) do
-    topic = Kastlex.CgStatusCollector.get_group_topic(group_id, topic_name)
-    json(conn, topic)
   end
 
 end

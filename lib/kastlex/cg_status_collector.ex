@@ -7,34 +7,7 @@ defmodule Kastlex.CgStatusCollector do
 
   @behaviour :brod_topic_subscriber
 
-  @table_groups  :consumer_groups
-  @table_offsets :consumer_offsets
   @topic "__consumer_offsets"
-  @server __MODULE__
-
-  def get_group_ids() do
-    ms = [{{:"$1", :_}, [], [:"$1"]}]
-    :ets.select(@table_groups, ms)
-  end
-
-  def get_group(group_id) do
-    ets_lookup(@table_groups, group_id, false)
-  end
-
-  def get_group_topics(group) do
-    ms = [{{{group, :"$1", :_}, :_}, [], [:"$1"]}]
-    :ets.select(@table_offsets, ms)
-  end
-
-  def get_group_topic(group, topic) do
-    ms = [{{{group, topic, :_}, :"$1"}, [], [:"$1"]}]
-    :ets.select(@table_offsets, ms)
-  end
-
-  def get_offsets() do
-    # get just values
-    :ets.select(@table_offsets, [{{:_, :"$1"}, [], [:"$1"]}])
-  end
 
   def start_link(options) do
     client = options.brod_client_id
@@ -46,55 +19,19 @@ defmodule Kastlex.CgStatusCollector do
   end
 
   def init(@topic, _) do
-    :ets.new(@table_groups, [:set, :protected, :named_table])
-    :ets.new(@table_offsets, [:set, :protected, :named_table])
     {:ok, [], %{}}
   end
 
   def handle_message(_partition, msg, state) do
     key_bin = kafka_message(msg, :key)
     value_bin = kafka_message(msg, :value)
-    {tag, data} = to_maps(:kpro_consumer_group.decode(key_bin, value_bin))
+    {tag, key, value} = :kpro_consumer_group.decode(key_bin, value_bin)
     case tag do
-      :offset ->
-        data =
-          maybe_fix_epoch(data, :commit_time) |>
-          maybe_fix_epoch(:expire_time)
-        :ets.insert(@table_offsets, {{data.group_id, data.topic, data.partition}, data})
-      :group ->
-        :ets.insert(@table_groups, {data.group_id, data})
+      :offset -> Kastlex.CgCache.commited_offset(key, value)
+      :group -> Kastlex.CgCache.new_cg_status(key, value)
     end
     {:ok, :ack, state}
   end
-
-  defp ets_lookup(table, key, default) do
-    case :ets.lookup(table, key) do
-      [] -> {:ok, default}
-      [{_, value}] -> {:ok, value}
-    end
-  end
-
-  defp maybe_fix_epoch(map, key) do
-    case Map.has_key?(map, key) do
-      true -> Map.update!(map, key, &epoch_to_str/1)
-      false -> map
-    end
-  end
-
-  defp epoch_to_str(epoch) do
-    {:ok, dt} = DateTime.from_unix(epoch, :milliseconds)
-    DateTime.to_string(dt)
-  end
-
-  def to_maps({tag, key, value}) do
-    data = Keyword.delete(key ++ value, :version)
-    {tag, Map.new(data, &do_to_maps/1)}
-  end
-
-  def do_to_maps({k, [x | _] = v}) when is_list(x), do: {k, :lists.map(&do_to_maps/1, v)}
-  def do_to_maps({k, [x | _] = v}) when is_tuple(x), do: {k, Map.new(v, &do_to_maps/1)}
-  def do_to_maps([{_, _} | _] = x), do: Map.new(:lists.map(&do_to_maps/1, x))
-  def do_to_maps({k, v}), do: {k, v}
 
 end
 
