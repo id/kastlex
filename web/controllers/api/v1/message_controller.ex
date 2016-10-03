@@ -4,19 +4,10 @@ defmodule Kastlex.API.V1.MessageController do
 
   use Kastlex.Web, :controller
 
-  plug Guardian.Plug.EnsureAuthenticated, handler: Kastlex.AuthErrorHandler
+  plug Kastlex.Plug.EnsurePermissions
 
-  plug Guardian.Plug.EnsurePermissions,
-    %{handler: Kastlex.AuthErrorHandler, client: [:fetch]}
-    when action in [:show]
-
-  plug Guardian.Plug.EnsurePermissions,
-    %{handler: Kastlex.AuthErrorHandler, client: [:produce]}
-    when action in [:create]
-
-  plug Kastlex.Plug.Authorize
-
-  def create(conn, %{"topic" => topic, "partition" => partition} = params) do
+  # TODO: partitioner
+  def produce(conn, %{"topic" => topic, "partition" => partition} = params) do
     {partition, _} = Integer.parse(partition)
     key = Map.get(params, "key", "")
     {:ok, value, conn} = read_body(conn)
@@ -24,18 +15,18 @@ defmodule Kastlex.API.V1.MessageController do
       :ok ->
         send_resp(conn, 204, "")
       {:error, :UnknownTopicOrPartition} ->
-        send_json(conn, 404, %{error: "unknown topic or partition"})
+        send_json(conn, 404, {:error, "unknown topic or partition"})
       {:error, {:producer_not_found, _topic}} ->
-        send_json(conn, 404, %{error: "unknown topic"})
+        send_json(conn, 404, {:error, "unknown topic"})
       {:error, {:producer_not_found, _topic, _partition}} ->
-        send_json(conn, 404, %{error: "unknown partition"})
+        send_json(conn, 404, {:error, "unknown partition"})
       {:error, reason} ->
         Logger.error "#{reason}"
-        send_json(conn, 503, %{error: "service unavailable"})
+        send_json(conn, 503, {:error, "service unavailable"})
     end
   end
 
-  def show(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
+  def fetch(conn, %{"topic" => topic, "partition" => partition, "offset" => offset} = params) do
     {partition, _} = Integer.parse(partition)
     {offset, _} = Integer.parse(offset)
     {max_wait_time, _} = Integer.parse(Map.get(params, "max_wait_time", "1000"))

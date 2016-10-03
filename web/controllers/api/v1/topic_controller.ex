@@ -4,25 +4,15 @@ defmodule Kastlex.API.V1.TopicController do
 
   use Kastlex.Web, :controller
 
-  plug Guardian.Plug.EnsureAuthenticated, handler: Kastlex.AuthErrorHandler
+  plug Kastlex.Plug.EnsurePermissions
 
-  plug Guardian.Plug.EnsurePermissions,
-    %{handler: Kastlex.AuthErrorHandler, admin: [:list_topics]}
-    when action in [:index]
-
-  plug Guardian.Plug.EnsurePermissions,
-    %{handler: Kastlex.AuthErrorHandler, client: [:show_topic]}
-    when action in [:show]
-
-  plug Kastlex.Plug.Authorize when action in [:show]
-
-  def index(conn, _params) do
+  def list_topics(conn, _params) do
     {:ok, topics} = Kastlex.MetadataCache.get_topics()
     topics = Enum.map(topics, fn(x) -> x.topic end)
     json(conn, topics)
   end
 
-  def show(conn, %{"topic" => name}) do
+  def show_topic(conn, %{"topic" => name}) do
     {:ok, topics} = Kastlex.MetadataCache.get_topics()
     case Enum.find(topics, nil, fn(x) -> x.topic == name end) do
       nil ->

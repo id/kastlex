@@ -14,7 +14,7 @@ defmodule Kastlex.Mixfile do
 
   def application do
     [mod: {Kastlex, []},
-     applications: [:logger, :phoenix, :cowboy, :gettext,
+     applications: [:logger, :phoenix, :cowboy, :gettext, :yamerl,
                     :erlzk, :brod, :guardian, :ssl]]
   end
 
@@ -22,18 +22,17 @@ defmodule Kastlex.Mixfile do
   defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
   defp elixirc_paths(_),     do: ["lib", "web"]
 
-  # Specifies your project dependencies.
-  #
-  # Type `mix help deps` for examples and options.
   defp deps do
     [{:phoenix, "~> 1.2"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
+     {:yaml_elixir, "~> 1.2"},
      {:brod, github: "klarna/brod", branch: "2.2-dev"},
      {:exrm, "~> 1.0"},
-     {:guardian, "~> 0.12.0"},
-     {:erlzk, "~> 0.6.3"}
+     {:guardian, "~> 0.13.0"},
+     {:erlzk, "~> 0.6.3"},
+     {:comeonin, "~> 2.5"}
     ]
   end
 

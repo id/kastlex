@@ -9,7 +9,7 @@ use Mix.Config
 config :kastlex, Kastlex.Endpoint,
   root: Path.dirname(__DIR__),
   secret_key_base: "2N8sGXA6wijnGpzmiEl3y6H2YCf7RbeBbi7xgE58txpm6AxDWS+A4TYrUY0jYYGV",
-  render_errors: [accepts: ~w(json), default_format: "json"]
+  render_errors: [accepts: ~w(json), default_format: ~w(json)]
 
 config :kastlex, Kastlex.MetadataCache,
   refresh_timeout_ms: 5000,
@@ -35,9 +35,7 @@ config :guardian, Guardian,
   ttl: { 30, :days },
   verify_issuer: true,
   # secret_key is expected to be found in $KASTLEX_SECRET_KEY_FILE
-  serializer: Kastlex.GuardianSerializer,
-  permissions: %{client: [:show_topic, :show_urp, :offsets, :fetch, :produce, :show_consumer],
-                 admin: [:list_topics, :list_brokers, :issue_token, :list_urps, :list_consumers]}
+  serializer: Kastlex.GuardianSerializer
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

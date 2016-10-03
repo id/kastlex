@@ -19,10 +19,15 @@ defmodule Kastlex.Web do
   def controller do
     quote do
       use Phoenix.Controller
-
+      require Logger
       import Kastlex.Router.Helpers
       import Kastlex.Helper
       import Kastlex.Gettext
+
+      def handle_errors(conn, data) do
+        Logger.error "#{inspect data}"
+        send_json(conn, conn.status, %{error: "Something went wrong"})
+      end
     end
   end
 

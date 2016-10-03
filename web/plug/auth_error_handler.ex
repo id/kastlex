@@ -1,7 +1,10 @@
 defmodule Kastlex.AuthErrorHandler do
 
-  import Plug.Conn
-  import Kastlex.Helper
+  use Kastlex.Web, :controller
+
+  @callback unauthenticated(Plug.t, Map.t) :: Plug.t
+  @callback unauthorized(Plug.t, Map.t) :: Plug.t
+  @callback already_authenticated(Plug.t, Map.t) :: Plug.t
 
   def unauthenticated(conn, _params) do
     send_json(conn, 401, %{error: "Unauthenticated"})
