@@ -161,6 +161,8 @@ Anonymous user can do pretty much everything except writing data to kafka.
 
 `admin` can reload permissions.
 
+`all` means access to all topics, replace it with a list of specific topics when applicable (see for example user.produce).
+
 Example passwd.yml:
 
     user1:
