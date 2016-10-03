@@ -15,7 +15,7 @@ defmodule Kastlex.Mixfile do
   def application do
     [mod: {Kastlex, []},
      applications: [:logger, :phoenix, :cowboy, :gettext, :yamerl,
-                    :erlzk, :brod, :guardian, :ssl]]
+                    :yaml_elixir, :comeonin, :erlzk, :brod, :guardian, :ssl]]
   end
 
   # Specifies which paths to compile per environment.
