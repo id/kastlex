@@ -11,11 +11,19 @@ defmodule Kastlex.CgStatusCollector do
 
   def start_link(options) do
     client = options.brod_client_id
-    consumer_config = [{:begin_offset, :earliest}]
-    ## start a topic subscriber which will spawn one consumer process
-    ## for each partition, and subscribe to all partition consumers
-    :brod_topic_subscriber.start_link(client, @topic, _partitions = :all,
-                                      consumer_config, __MODULE__, nil)
+    Kastlex.MetadataCache.sync()
+    {:ok, topics} = Kastlex.MetadataCache.get_topics()
+    case Enum.find(topics, nil, fn(x) -> x.topic == @topic end) do
+      nil ->
+        Logger.info "#{@topic} topic not found, skip cg_status_collector"
+        :ignore
+      _ ->
+        consumer_config = [{:begin_offset, :earliest}]
+        ## start a topic subscriber which will spawn one consumer process
+        ## for each partition, and subscribe to all partition consumers
+        :brod_topic_subscriber.start_link(client, @topic, _partitions = :all,
+                                          consumer_config, __MODULE__, nil)
+    end
   end
 
   def init(@topic, _) do

@@ -8,10 +8,15 @@ defmodule Kastlex.MetadataCache do
   @table __MODULE__
   @server __MODULE__
   @refresh :refresh
+  @sync :sync
 
   @brokers_path "/brokers/ids"
   @topics_path "/brokers/topics"
   @topics_config_path "/config/topics"
+
+  def sync() do
+    GenServer.call(@server, @sync)
+  end
 
   def get_ts() do
     [{:ts, ts}] = :ets.lookup(@table, :ts)
@@ -43,12 +48,16 @@ defmodule Kastlex.MetadataCache do
     zk_session_timeout = Keyword.fetch!(env, :zk_session_timeout)
     zk_chroot = Keyword.fetch!(env, :zk_chroot)
     {:ok, zk} = :erlzk.connect(zk_cluster, zk_session_timeout, [chroot: zk_chroot])
-    :erlang.send_after(0, Kernel.self(), @refresh)
+    send(Kernel.self(), @refresh)
     {:ok, %{refresh_timeout_ms: refresh_timeout_ms,
             zk: zk,
             zk_cluster: zk_cluster,
             zk_session_timeout: zk_session_timeout,
             zk_chroot: zk_chroot}}
+  end
+
+  def handle_call(@sync, _, state) do
+    {:reply, :ok, state}
   end
 
   def handle_info(@refresh, state) do
