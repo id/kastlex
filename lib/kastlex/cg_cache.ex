@@ -90,7 +90,7 @@ defmodule Kastlex.CgCache do
                  Map.put(x, :high_wm_offset, hwm_offset)
                end)
     end
-    group = Map.update!(group, :partitions, f)
+    group = Map.update(group, :partitions, [], f)
     :ets.insert(@table, {group_id, group})
   end
 

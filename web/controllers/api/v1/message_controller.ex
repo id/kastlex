@@ -15,14 +15,14 @@ defmodule Kastlex.API.V1.MessageController do
       :ok ->
         send_resp(conn, 204, "")
       {:error, :UnknownTopicOrPartition} ->
-        send_json(conn, 404, {:error, "unknown topic or partition"})
+        send_json(conn, 404, %{error: "Unknown topic or partition"})
       {:error, {:producer_not_found, _topic}} ->
-        send_json(conn, 404, {:error, "unknown topic"})
+        send_json(conn, 404, %{error: "Unknown topic"})
       {:error, {:producer_not_found, _topic, _partition}} ->
-        send_json(conn, 404, {:error, "unknown partition"})
+        send_json(conn, 404, %{error: "Unknown partition"})
       {:error, reason} ->
         Logger.error "#{reason}"
-        send_json(conn, 503, {:error, "service unavailable"})
+        send_json(conn, 503, %{error: "Service unavailable"})
     end
   end
 
@@ -47,7 +47,9 @@ defmodule Kastlex.API.V1.MessageController do
                  messages: messages_to_map(messages)}
         json(conn, resp)
       {:error, :UnknownTopicOrPartition} ->
-        send_json(conn, 404, %{error: "unknown topic or partition"})
+        send_json(conn, 404, %{error: "Unknown topic or partition"})
+      {:error, :LeaderNotAvailable} ->
+        send_json(conn, 404, %{error: "Leader not available"})
     end
   end
 
