@@ -21,6 +21,7 @@ defmodule Kastlex.Router do
     post "/rest/kafka/v0/:topic", KastleController, :create
     post "/rest/kafka/v0/:topic/:partition", KastleController, :create
     post "/login", LoginController, :login
+    get "/favicon.ico", CatchAllController, :favicon
   end
 
   scope "/admin", as: :admin, alias: Kastlex.Admin do
