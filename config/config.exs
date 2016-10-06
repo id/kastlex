@@ -12,7 +12,7 @@ config :kastlex, Kastlex.Endpoint,
   render_errors: [accepts: ~w(json), default_format: ~w(json)]
 
 config :kastlex, Kastlex.MetadataCache,
-  refresh_timeout_ms: 5000,
+  refresh_timeout_ms: 30000,
   zk_chroot: "/",
   zk_session_timeout: 30000
 
