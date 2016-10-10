@@ -28,7 +28,7 @@ defmodule Kastlex.Mixfile do
      {:gettext, "~> 0.11"},
      {:cowboy, "~> 1.0"},
      {:yaml_elixir, "~> 1.2"},
-     {:brod, github: "klarna/brod", branch: "2.2-dev"},
+     {:brod, "~> 2.2.0"},
      {:exrm, "~> 1.0"},
      {:guardian, "~> 0.13.0"},
      {:erlzk, "~> 0.6.3"},
